@@ -1,378 +1,174 @@
 <!DOCTYPE html>
-
 <html lang="fr">
-
 <head>
-
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
 <title>Pomme</title>
 
 <link rel="icon" href="icon.png">
-
 <link rel="apple-touch-icon" href="icon.png">
 
-<meta name="apple-mobile-web-app-capable" content="yes">
-
-<meta name="apple-mobile-web-app-title" content="Pomme">
-
-<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
-
 <style>
-
 html, body {
-
   touch-action: manipulation;
-
 }
 
-button {
-
-  touch-action: manipulation;
-
-}
-
-* {
-
-  margin:0;
-
-  padding:0;
-
-  box-sizing:border-box;
-
-}
+* { margin:0; padding:0; box-sizing:border-box; }
 
 body {
-
-  min-height:100vh;
-
+  min-height: 100vh;
   display:flex;
-
   justify-content:center;
-
   align-items:center;
-
-  font-family:'Nunito', sans-serif;
-
-  background:url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854') center/cover;
-
-  overflow:hidden;
-
+  font-family:sans-serif;
+  background:#f5f5f5;
 }
 
+/* GAME */
 .overlay {
-
-  background:rgba(255,255,255,0.25);
-
-  backdrop-filter:blur(18px);
-
-  -webkit-backdrop-filter:blur(18px);
-
-  border:1.5px solid rgba(255,255,255,0.5);
-
-  padding:30px;
-
-  border-radius:32px;
-
+  background:white;
+  padding:25px;
+  border-radius:20px;
   text-align:center;
-
-  width:360px;
-
-  box-shadow:0 16px 40px rgba(0,0,0,0.22);
-
-}
-
-h1 {
-
-  font-family:'Fredoka One';
-
-  font-size:2rem;
-
-  color:#1b5e20;
-
-}
-
-.stats-row {
-
-  display:flex;
-
-  justify-content:space-around;
-
-  margin:15px 0;
-
-}
-
-.stat-box {
-
-  background:rgba(255,255,255,0.5);
-
-  padding:8px 15px;
-
-  border-radius:12px;
-
-  font-weight:bold;
-
+  width:320px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.2);
 }
 
 #appleBtn {
-
-  width:180px;
-
-  height:180px;
-
-  border-radius:50%;
-
-  font-size:90px;
-
+  font-size:80px;
   border:none;
-
+  background:none;
   cursor:pointer;
-
-  background:radial-gradient(circle,#fff,#ffb3b3);
-
-  transition:0.1s;
-
 }
-
-#appleBtn:active {
-
-  transform:scale(0.9);
-
-}
-
-#counter {
-
-  font-size:1.6rem;
-
-  margin-top:15px;
-
-}
-
-/* CONFETTI */
-
-.confetti {
-
-  position:fixed;
-
-  font-size:20px;
-
-  animation:fall 1.5s linear forwards;
-
-}
-
-@keyframes fall {
-
-  0% { transform:translateY(-50px); opacity:1; }
-
-  100% { transform:translateY(110vh); opacity:0; }
-
-}
-
-/* PARTIKULES */
-
-.particle {
-
-  position:fixed;
-
-  animation:burst 0.7s ease-out forwards;
-
-}
-
-@keyframes burst {
-
-  0% { transform:scale(1); opacity:1; }
-
-  100% { transform:scale(0.2) translate(40px,-40px); opacity:0; }
-
-}
-
-/* LEADERBOARD */
 
 #leaderboardBox {
-
-  display:none;
-
+  display:none; /* 👈 IMPORTANT : caché au début */
   margin-top:20px;
-
-  background:#fff;
-
   padding:15px;
-
+  background:#fff;
   border-radius:15px;
-
+  box-shadow:0 5px 15px rgba(0,0,0,0.2);
 }
 
 #leaderboard {
-
+  margin-top:10px;
   text-align:left;
-
-  margin:10px 0;
-
 }
 
-#pseudo {
-
-  width:100%;
-
-  padding:10px;
-
-  margin:8px 0;
-
+#timeupMsg {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  color:white;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
 }
-
-button.send {
-
-  width:100%;
-
-  padding:10px;
-
-  background:#43a047;
-
-  color:#fff;
-
-  border:none;
-
-  border-radius:10px;
-
-}
-
 </style>
-
 </head>
 
 <body>
 
 <div class="overlay">
 
-  <h1>🍎 Pomme</h1>
+  <h1>Pomme 🍎</h1>
 
-  <div class="stats-row">
-
-    <div class="stat-box">⏱ <span id="timer">30</span></div>
-
-    <div class="stat-box">🏆 <span id="best">0</span></div>
-
-  </div>
+  <div>⏱ <span id="timerDisplay">30</span></div>
+  <div>🏆 Record : <span id="bestScore">0</span></div>
 
   <button id="appleBtn">🍎</button>
 
   <div id="counter">Clics : 0</div>
 
-  <!-- LEADERBOARD -->
+  <button id="resetBtn">Recommencer</button>
 
+</div>
+
+<!-- FIN DE PARTIE -->
+<div id="timeupMsg">
+  <h2>Temps écoulé !</h2>
+  <p id="finalMsg"></p>
+
+  <input id="pseudo" placeholder="Ton pseudo">
+
+  <button onclick="sendScore()">Envoyer score</button>
+
+  <button onclick="showLeaderboard()">Voir classement</button>
+
+  <button onclick="resetGame()">Rejouer</button>
+
+  <!-- CLASSEMENT (caché au début) -->
   <div id="leaderboardBox">
-
     <h3>🏆 Classement</h3>
-
     <div id="leaderboard"></div>
-
-    <input id="pseudo" placeholder="Ton pseudo">
-
-    <button class="send" onclick="sendScore()">Envoyer score</button>
-
   </div>
-
 </div>
 
 <script>
 
 let clicks = 0;
-
-let time = 30;
-
-let started = false;
-
-let gameOver = false;
-
+let timer = 30;
+let interval;
 let best = localStorage.getItem("best") || 0;
 
-document.getElementById("best").innerText = best;
+document.getElementById("bestScore").textContent = best;
 
 const btn = document.getElementById("appleBtn");
-
 const counter = document.getElementById("counter");
+const timerDisplay = document.getElementById("timerDisplay");
+const finalMsg = document.getElementById("finalMsg");
+const timeupMsg = document.getElementById("timeupMsg");
+const leaderboardBox = document.getElementById("leaderboardBox");
 
-btn.onclick = (e) => {
-
-  if (gameOver) return;
-
-  if (!started) {
-
-    started = true;
-
-    startTimer();
-
-  }
-
+btn.onclick = () => {
   clicks++;
-
-  counter.innerText = "Clics : " + clicks;
-
-  spawnParticles(e.clientX, e.clientY);
-
-  if (clicks % 10 === 0) launchConfetti();
-
+  counter.textContent = "Clics : " + clicks;
+  if (!interval) startTimer();
 };
 
 function startTimer() {
+  interval = setInterval(() => {
+    timer--;
+    timerDisplay.textContent = timer;
 
-  let t = setInterval(() => {
-
-    time--;
-
-    document.getElementById("timer").innerText = time;
-
-    if (time <= 0) {
-
-      clearInterval(t);
-
-      endGame();
-
-    }
+    if (timer <= 0) endGame();
 
   }, 1000);
-
 }
 
 function endGame() {
-
-  gameOver = true;
-
-  window.lastScore = clicks;
+  clearInterval(interval);
 
   if (clicks > best) {
-
     best = clicks;
-
     localStorage.setItem("best", best);
-
-    document.getElementById("best").innerText = best;
-
   }
 
-  document.getElementById("leaderboardBox").style.display = "block";
+  finalMsg.textContent = "Score : " + clicks + " | Record : " + best;
 
-  loadScores();
+  timeupMsg.style.display = "flex";
 
+  // reset affichage leaderboard
+  leaderboardBox.style.display = "none";
 }
 
-/* SCORE SYSTEM */
+function resetGame() {
+  clicks = 0;
+  timer = 30;
+  interval = null;
+
+  counter.textContent = "Clics : 0";
+  timerDisplay.textContent = "30";
+  timeupMsg.style.display = "none";
+}
 
 function sendScore() {
-
   let name = document.getElementById("pseudo").value || "Joueur";
 
   let scores = JSON.parse(localStorage.getItem("scores") || "[]");
 
-  scores.push({
-
-    name,
-
-    score: window.lastScore || clicks
-
-  });
+  scores.push({ name, score: clicks });
 
   scores.sort((a,b) => b.score - a.score);
 
@@ -381,81 +177,26 @@ function sendScore() {
   localStorage.setItem("scores", JSON.stringify(scores));
 
   loadScores();
-
 }
 
 function loadScores() {
-
   let scores = JSON.parse(localStorage.getItem("scores") || "[]");
 
   let html = "";
 
   scores.forEach((s,i) => {
-
-    html += `${i+1}. ${s.name} - ${s.score}<br>`;
-
+    html += (i+1)+". "+s.name+" - "+s.score+"<br>";
   });
 
-  document.getElementById("leaderboard").innerHTML =
-
-    html || "Aucun score";
-
+  document.getElementById("leaderboard").innerHTML = html;
 }
 
-/* CONFETTI */
-
-function launchConfetti() {
-
-  for (let i=0;i<15;i++) {
-
-    let c = document.createElement("div");
-
-    c.className = "confetti";
-
-    c.innerText = ["🍎","🍏","✨","🎉"][Math.floor(Math.random()*4)];
-
-    c.style.left = Math.random()*100+"vw";
-
-    document.body.appendChild(c);
-
-    setTimeout(()=>c.remove(),1500);
-
-  }
-
+function showLeaderboard() {
+  leaderboardBox.style.display = "block";
+  loadScores();
 }
-
-/* PARTICULES */
-
-function spawnParticles(x,y) {
-
-  for (let i=0;i<5;i++) {
-
-    let p = document.createElement("div");
-
-    p.className = "particle";
-
-    p.innerText = "🍎";
-
-    p.style.left = x+"px";
-
-    p.style.top = y+"px";
-
-    document.body.appendChild(p);
-
-    setTimeout(()=>p.remove(),700);
-
-  }
-
-}
-
-/* BLOQUE ZOOM iPhone */
-
-document.addEventListener("gesturestart", e => e.preventDefault());
-
-loadScores();
 
 </script>
 
 </body>
-
 </html>
