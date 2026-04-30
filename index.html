@@ -1,153 +1,45 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Pomme</title>
-
-<link rel="icon" href="icon.png">
-<link rel="apple-touch-icon" href="icon.png">
-
-<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
-
-<style>
-html, body { touch-action: manipulation; }
-button { touch-action: manipulation; }
-* { margin:0; padding:0; box-sizing:border-box; }
-
-body {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-family: 'Nunito', sans-serif;
-  background-image: url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854');
-  background-size: cover;
-  background-position: center;
-  overflow: hidden;
-}
-
-.card {
-  background: rgba(255,255,255,0.25);
-  backdrop-filter: blur(18px);
-  border-radius: 32px;
-  text-align: center;
-  position: absolute;
-  width: 360px;
-  padding: 32px;
-  transition: 0.35s;
-}
-
-.card.hidden {
-  opacity: 0;
-  pointer-events: none;
-  transform: scale(0.95);
-}
-
-.btn-green {
-  padding:10px 26px;
-  border:none;
-  border-radius:50px;
-  cursor:pointer;
-  background:#43a047;
-  color:white;
-}
-
-.btn-red {
-  background:#e53935;
-  color:white;
-  border:none;
-  border-radius:50px;
-  padding:10px 26px;
-}
-
-#appleBtn {
-  width:200px;
-  height:200px;
-  border-radius:50%;
-  font-size:100px;
-}
-</style>
-
-</head>
-
-<body>
-
-<!-- SCREEN 1 -->
-<div class="card" id="screen-name">
-  <h1>🍎 Pomme</h1>
-  <input id="nameInput" placeholder="Ton pseudo..." />
-  <button class="btn-green" id="nameConfirmBtn">Jouer</button>
-</div>
-
-<!-- SCREEN 2 -->
-<div class="card hidden" id="screen-game">
-  <button id="appleBtn">🍎</button>
-  <div id="counter">0</div>
-</div>
-
-<!-- SCREEN 3 -->
-<div class="card hidden" id="screen-end">
-  <div id="finalMsg"></div>
-  <div id="leaderboard-panel"></div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script>
-/* ================= SUPABASE SAFE INIT ================= */
-
 const SUPABASE_URL = "https://qaofelxfekofzkuhsvir.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFhb2ZlbHhmZWtvZnprdWhzdmlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mzg3NjAsImV4cCI6MjA5MzExNDc2MH0.eQI91OCDJVRz-dFr6omZlAlhQtZ06xMslArTduZJRC8";
 
 let supabase = null;
-
-window.addEventListener("load", () => {
-  if (window.supabase) {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    console.log("Supabase OK");
-  } else {
-    console.error("Supabase non chargé");
-  }
-});
-
-/* ================= ETAT ================= */
-
 let clicks = 0;
 let playerName = "";
 
-/* ================= DOM ================= */
-
+/* DOM */
 const screenName = document.getElementById("screen-name");
 const screenGame = document.getElementById("screen-game");
 const screenEnd = document.getElementById("screen-end");
 
-const btn = document.getElementById("appleBtn");
+const appleBtn = document.getElementById("appleBtn");
 const counter = document.getElementById("counter");
 
-/* ================= NAV ================= */
-
+/* NAV */
 function show(screen) {
   [screenName, screenGame, screenEnd].forEach(s => s.classList.add("hidden"));
   screen.classList.remove("hidden");
 }
 
-/* ================= START ================= */
-
+/* GAME START */
 function startGame() {
   clicks = 0;
   counter.textContent = "0";
   show(screenGame);
 }
 
-/* ================= PSEUDO ================= */
+/* INIT SUPABASE */
+window.addEventListener("load", () => {
+  if (window.supabase) {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log("Supabase OK");
+  }
+});
 
-window.addEventListener("DOMContentLoaded", () => {
-
-  const btn = document.getElementById("nameConfirmBtn");
+/* PSEUDO */
+document.addEventListener("DOMContentLoaded", () => {
+  const nameBtn = document.getElementById("nameConfirmBtn");
   const input = document.getElementById("nameInput");
 
-  btn.addEventListener("click", () => {
+  nameBtn.addEventListener("click", () => {
     const val = input.value.trim();
     if (!val) return;
 
@@ -155,19 +47,20 @@ window.addEventListener("DOMContentLoaded", () => {
     startGame();
   });
 
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") nameBtn.click();
+  });
 });
 
-/* ================= GAME ================= */
-
-btn.onclick = () => {
+/* CLICK GAME */
+appleBtn.addEventListener("click", () => {
   clicks++;
   counter.textContent = clicks;
 
   if (clicks >= 10) endGame();
-};
+});
 
-/* ================= END GAME ================= */
-
+/* END GAME */
 async function endGame() {
   show(screenEnd);
 
@@ -178,8 +71,7 @@ async function endGame() {
   renderLeaderboard();
 }
 
-/* ================= SUPABASE SAFE ================= */
-
+/* SUPABASE */
 async function saveScore(name, score) {
   if (!supabase) return;
 
@@ -187,16 +79,15 @@ async function saveScore(name, score) {
     .from("scores")
     .insert([{ name, score }]);
 
-  if (error) console.log("Insert error:", error);
+  if (error) console.log(error);
 }
 
-/* ================= LEADERBOARD SAFE ================= */
-
+/* LEADERBOARD */
 async function renderLeaderboard() {
   const panel = document.getElementById("leaderboard-panel");
 
   if (!supabase) {
-    panel.innerHTML = "Supabase non prêt";
+    panel.innerHTML = "Supabase pas prêt";
     return;
   }
 
@@ -208,7 +99,6 @@ async function renderLeaderboard() {
 
   if (error) {
     panel.innerHTML = "Erreur leaderboard";
-    console.log(error);
     return;
   }
 
@@ -217,14 +107,4 @@ async function renderLeaderboard() {
     .join("");
 }
 
-/* ================= DEBUG ================= */
-
-window.onerror = function(msg) {
-  console.log("JS ERROR:", msg);
-};
-
 console.log("JS chargé");
-</script>
-
-</body>
-</html>
