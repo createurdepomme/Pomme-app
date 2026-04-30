@@ -28,7 +28,6 @@ body {
   overflow: hidden;
 }
 
-/* ── Carte générique ── */
 .card {
   background: rgba(255,255,255,0.25);
   backdrop-filter: blur(18px);
@@ -48,7 +47,6 @@ body {
   transform: scale(0.95);
 }
 
-/* ── Titres ── */
 h1 {
   font-family: 'Fredoka One', cursive;
   font-size: 2.2rem;
@@ -64,7 +62,6 @@ h2 {
   margin-bottom: 10px;
 }
 
-/* ── Boutons ── */
 .btn-green, .btn-red {
   padding: 10px 26px;
   font-family: 'Fredoka One', cursive;
@@ -81,9 +78,6 @@ h2 {
 .btn-red:active   { transform: translateY(1px); box-shadow: 0 2px 0 #7f0000; }
 .btn-green:active { transform: translateY(1px); box-shadow: 0 2px 0 #0a3d0a; }
 
-/* ════════════════════════════════════
-   ÉCRAN 1 — PSEUDO
-════════════════════════════════════ */
 #screen-name p {
   font-size: 1rem;
   font-weight: 700;
@@ -107,9 +101,6 @@ h2 {
   margin-right: auto;
 }
 
-/* ════════════════════════════════════
-   ÉCRAN 2 — JEU
-════════════════════════════════════ */
 .stats-row {
   display: flex;
   justify-content: space-around;
@@ -183,15 +174,9 @@ h2 {
   border-radius: 20px;
   transition: width 0.2s ease;
 }
-#resetBtn {
-  margin-top: 14px;
-}
+#resetBtn { margin-top: 14px; }
 
-/* ════════════════════════════════════
-   ÉCRAN 3 — FIN + CLASSEMENT
-════════════════════════════════════ */
 #screen-end { padding: 24px 20px 20px; }
-
 #finalMsg {
   font-size: 1rem;
   font-weight: 900;
@@ -199,7 +184,6 @@ h2 {
   margin-bottom: 14px;
 }
 
-/* Classement */
 #leaderboard-panel {
   width: 100%;
   max-height: 260px;
@@ -230,18 +214,15 @@ h2 {
 .lb-name  { flex:1; }
 .lb-score { font-family:'Fredoka One',cursive; font-size:1rem; color:#c62828; }
 
-.lb-empty, .lb-loading {
+.lb-empty {
   text-align: center;
   color: #555;
   font-size: 0.9rem;
   padding: 16px 0;
 }
-.lb-loading { animation: pulse 1s ease-in-out infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
 .btn-row { display:flex; gap:10px; justify-content:center; }
 
-/* ── Animations ── */
 .flash { animation: flashAnim 0.55s ease; }
 @keyframes flashAnim {
   0%   { transform: scale(1) rotate(0deg); }
@@ -258,7 +239,6 @@ h2 {
   80%{transform:translateX(5px)}
 }
 
-/* ── Effets visuels ── */
 .confetti {
   position: fixed; animation: fall linear forwards;
   pointer-events: none; z-index: 999;
@@ -320,9 +300,7 @@ h2 {
 <div class="card hidden" id="screen-end">
   <h2>⏰ Temps écoulé !</h2>
   <div id="finalMsg"></div>
-  <div id="leaderboard-panel">
-    <div class="lb-loading">Chargement... 🍎</div>
-  </div>
+  <div id="leaderboard-panel"></div>
   <div class="btn-row">
     <button class="btn-green" id="replayBtn">🔄 Rejouer</button>
     <button class="btn-red"   id="changeNameBtn">👤 Changer</button>
@@ -348,17 +326,17 @@ const messages = [
 ];
 
 // ── DOM ────────────────────────────────────────────────────────
-const screenName = document.getElementById('screen-name');
-const screenGame = document.getElementById('screen-game');
-const screenEnd  = document.getElementById('screen-end');
-const btn        = document.getElementById('appleBtn');
-const counter    = document.getElementById('counter');
-const messageEl  = document.getElementById('message');
-const niveauEl   = document.getElementById('niveau');
-const progressBar= document.getElementById('progressBar');
-const timerDisp  = document.getElementById('timerDisplay');
-const bestScoreEl= document.getElementById('bestScore');
-const overlay    = document.getElementById('screen-game');
+const screenName  = document.getElementById('screen-name');
+const screenGame  = document.getElementById('screen-game');
+const screenEnd   = document.getElementById('screen-end');
+const btn         = document.getElementById('appleBtn');
+const counter     = document.getElementById('counter');
+const messageEl   = document.getElementById('message');
+const niveauEl    = document.getElementById('niveau');
+const progressBar = document.getElementById('progressBar');
+const timerDisp   = document.getElementById('timerDisplay');
+const bestScoreEl = document.getElementById('bestScore');
+const overlay     = document.getElementById('screen-game');
 
 bestScoreEl.textContent = bestScore;
 
@@ -386,24 +364,19 @@ function confirmName() {
 function startFreshGame() {
   clicks = 0; timerLeft = 30; gameStarted = false; gameOver = false;
   clearInterval(timerInterval);
-  counter.textContent      = "Clics : 0";
-  messageEl.textContent    = "Appuie pour commencer !";
-  niveauEl.textContent     = "Niveau 1 🌱";
-  timerDisp.textContent    = "30";
+  counter.textContent     = "Clics : 0";
+  messageEl.textContent   = "Appuie pour commencer !";
+  niveauEl.textContent    = "Niveau 1 🌱";
+  timerDisp.textContent   = "30";
   timerDisp.parentElement.style.color = '#2e7d32';
-  progressBar.style.width  = "0%";
-  btn.textContent          = "🍎";
-  bestScoreEl.textContent  = bestScore;
+  progressBar.style.width = "0%";
+  btn.textContent         = "🍎";
+  bestScoreEl.textContent = bestScore;
   showScreen(screenGame);
 }
 
-// Bouton recommencer (même joueur)
 document.getElementById('resetBtn').addEventListener('click', startFreshGame);
-
-// Bouton recommencer depuis l'écran fin
 document.getElementById('replayBtn').addEventListener('click', startFreshGame);
-
-// Bouton changer de nom
 document.getElementById('changeNameBtn').addEventListener('click', () => {
   document.getElementById('nameInput').value = '';
   showScreen(screenName);
@@ -446,15 +419,14 @@ function startTimer() {
   }, 1000);
 }
 
-async function endGame() {
+function endGame() {
   clearInterval(timerInterval);
   gameOver = true;
   if (clicks > bestScore) {
     bestScore = clicks;
     localStorage.setItem('pomme_best', bestScore);
   }
-
-if (playerName) saveScore(playerName, clicks);
+  if (playerName) saveScore(playerName, clicks);
   document.getElementById('finalMsg').textContent =
     `${playerName}, tu as cliqué ${clicks} fois ! 🍎  Ton record : ${bestScore}`;
   showScreen(screenEnd);
@@ -502,32 +474,31 @@ btn.addEventListener("click", (e) => {
   }
 });
 
-// ── Classement ─────────────────────────────────────────────────
+// ── Classement (localStorage) ──────────────────────────────────
 const LB_KEY = 'pomme-leaderboard-v1';
+
+function loadLeaderboard() {
+  try {
+    return JSON.parse(localStorage.getItem(LB_KEY) || '[]');
+  } catch { return []; }
+}
 
 function saveScore(name, score) {
   let entries = loadLeaderboard();
-
   const idx = entries.findIndex(e => e.name === name);
-
   if (idx >= 0) {
-    if (score > entries[idx].score) {
-      entries[idx].score = score;
-    }
+    if (score > entries[idx].score) entries[idx].score = score;
   } else {
     entries.push({ name, score });
   }
-
   entries.sort((a, b) => b.score - a.score);
   entries = entries.slice(0, 20);
-
   localStorage.setItem(LB_KEY, JSON.stringify(entries));
 }
 
 function renderLeaderboard() {
   const panel = document.getElementById('leaderboard-panel');
-  panel.innerHTML = '<div class="lb-loading">Chargement... 🍎</div>';
- const entries = loadLeaderboard();
+  const entries = loadLeaderboard();
   if (!entries.length) {
     panel.innerHTML = '<div class="lb-empty">Aucun score encore. Sois le premier ! 🍎</div>';
     return;
