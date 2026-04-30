@@ -306,8 +306,12 @@ h2 {
     <button class="btn-red"   id="changeNameBtn">👤 Changer</button>
   </div>
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+const SUPABASE_URL = "https://qaofelxfekofzkuhsvir.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFhb2ZlbHhmZWtvZnprdWhzdmlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mzg3NjAsImV4cCI6MjA5MzExNDc2MH0.eQI91OCDJVRz-dFr6omZlAlhQtZ06xMslArTduZJRC8";
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 document.addEventListener("gesturestart", e => e.preventDefault());
 
 // ── État ───────────────────────────────────────────────────────
