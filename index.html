@@ -423,14 +423,16 @@ function startTimer() {
   }, 1000);
 }
 
-function endGame() {
+async function endGame() {
   clearInterval(timerInterval);
   gameOver = true;
   if (clicks > bestScore) {
     bestScore = clicks;
     localStorage.setItem('pomme_best', bestScore);
   }
-  if (playerName) saveScore(playerName, clicks);
+  if (playerName) {
+  await saveScore(playerName, clicks);
+}
   document.getElementById('finalMsg').textContent =
     `${playerName}, tu as cliqué ${clicks} fois ! 🍎  Ton record : ${bestScore}`;
   showScreen(screenEnd);
@@ -487,38 +489,33 @@ function loadLeaderboard() {
   } catch { return []; }
 }
 
-function saveScore(name, score) {
-  let entries = loadLeaderboard();
-  const idx = entries.findIndex(e => e.name === name);
-  if (idx >= 0) {
-    if (score > entries[idx].score) entries[idx].score = score;
-  } else {
-    entries.push({ name, score });
-  }
-  entries.sort((a, b) => b.score - a.score);
-  entries = entries.slice(0, 20);
-  localStorage.setItem(LB_KEY, JSON.stringify(entries));
+async function saveScore(name, score) {
+  await supabase.from('scores').insert([
+    { name: name, score: score }
+  ]);
 }
 
-function renderLeaderboard() {
+async function renderLeaderboard() {
   const panel = document.getElementById('leaderboard-panel');
-  const entries = loadLeaderboard();
-  if (!entries.length) {
-    panel.innerHTML = '<div class="lb-empty">Aucun score encore. Sois le premier ! 🍎</div>';
+
+  const { data, error } = await supabase
+    .from('scores')
+    .select('*')
+    .order('score', { ascending: false })
+    .limit(10);
+
+  if (error || !data) {
+    panel.innerHTML = "<div>Erreur classement</div>";
     return;
   }
-  const medals  = ['🥇','🥈','🥉'];
-  const classes = ['gold','silver','bronze'];
-  panel.innerHTML = entries.map((e, i) => {
-    const isMe = e.name === playerName;
-    const cls  = (i < 3 ? classes[i] : '') + (isMe ? ' me' : '');
-    const rank = i < 3 ? medals[i] : `#${i+1}`;
-    return `<div class="lb-row ${cls}">
-      <span class="lb-rank">${rank}</span>
-      <span class="lb-name">${escHtml(e.name)}</span>
+
+  panel.innerHTML = data.map((e, i) => `
+    <div class="lb-row">
+      <span class="lb-rank">#${i + 1}</span>
+      <span class="lb-name">${e.name}</span>
       <span class="lb-score">${e.score} 🍎</span>
-    </div>`;
-  }).join('');
+    </div>
+  `).join('');
 }
 
 function escHtml(str) {
