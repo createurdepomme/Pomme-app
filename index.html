@@ -232,6 +232,7 @@ btn.onclick=(e)=>{
   }
 
   clicks++;
+  spawnJuice(e.clientX, e.clientY);
   counter.textContent="Clics : "+clicks;
   msg.textContent=messages[Math.floor(Math.random()*messages.length)];
 
