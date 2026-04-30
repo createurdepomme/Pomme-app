@@ -272,6 +272,53 @@ h1 {
 document.addEventListener("gesturestart", function(e) {
   e.preventDefault();
 });
+#leaderboardBox{
+  margin-top:20px;
+  background:white;
+  padding:15px;
+  border-radius:20px;
+  box-shadow:0 8px 20px rgba(0,0,0,0.15);
+}
+
+#leaderboardBox h2{
+  margin-bottom:10px;
+  font-size:22px;
+  color:#2e7d32;
+}
+
+#leaderboard{
+  margin:10px 0;
+  font-weight:bold;
+  text-align:left;
+  line-height:1.8;
+  color:#333;
+}
+
+#pseudo{
+  padding:10px;
+  width:100%;
+  border-radius:10px;
+  border:none;
+  outline:none;
+  margin-bottom:10px;
+  font-size:16px;
+}
+
+#leaderboardBox button{
+  padding:10px;
+  width:100%;
+  border:none;
+  border-radius:12px;
+  background:#43a047;
+  color:white;
+  font-weight:bold;
+  font-size:16px;
+  cursor:pointer;
+}
+
+#leaderboardBox button:active{
+  transform:scale(0.98);
+}
 </style>
 
 </head>
@@ -301,7 +348,26 @@ document.addEventListener("gesturestart", function(e) {
 </div>
 
 <!-- Écran fin de partie -->
+<div id="leaderboardBox">
+  <h2>🏆 Classement</h2>
+  <div id="leaderboard"></div>
 
+  <input type="text" id="pseudo" placeholder="Ton pseudo">
+  <button onclick="sendScore()">Envoyer score</button>
+</div>
+<div id="leaderboardBox">
+  <h2>🏆 Classement</h2>
+
+  <div id="leaderboard">
+    Chargement...
+  </div>
+
+  <input type="text" id="pseudo" placeholder="Ton pseudo">
+
+  <button onclick="sendScore()">
+    Envoyer score
+  </button>
+</div>
 <div id="timeupMsg">
   <h2>⏰ Temps écoulé !</h2>
   <p id="finalMsg"></p>
@@ -505,6 +571,41 @@ function showPopup(x, y, text) {
   document.body.appendChild(p);
   setTimeout(() => p.remove(), 900);
 }
+function sendScore() {
+  let pseudo = document.getElementById("pseudo").value.trim();
+  if (pseudo === "") pseudo = "Joueur";
+
+  let scores = JSON.parse(localStorage.getItem("pomme_scores") || "[]");
+
+  scores.push({
+    name: pseudo,
+    score: clicks
+  });
+
+  scores.sort((a, b) => b.score - a.score);
+
+  scores = scores.slice(0, 10);
+
+  localStorage.setItem("pomme_scores", JSON.stringify(scores));
+
+  loadScores();
+}
+
+function loadScores() {
+  let scores = JSON.parse(localStorage.getItem("pomme_scores") || "[]");
+
+  let html = "";
+
+  scores.forEach((player, index) => {
+    html += (index + 1) + ". " + player.name + " - " + player.score + "<br>";
+  });
+
+  if (html === "") html = "Aucun score";
+
+  document.getElementById("leaderboard").innerHTML = html;
+}
+
+loadScores();
 </script>
 
 </body>
