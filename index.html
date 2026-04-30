@@ -2,65 +2,135 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍎 Pomme Magique</title>
 
-<title>Pomme</title>
-
-<link rel="icon" href="icon.png">
-<link rel="apple-touch-icon" href="icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Pomme">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 
 <style>
-html, body {
-  touch-action: manipulation;
-  user-select: none;
-  overflow: hidden;
-  font-family: Arial;
-}
-
-button {
-  touch-action: manipulation;
-}
+* { margin:0; padding:0; box-sizing:border-box; }
 
 body {
+  min-height: 100vh;
   display:flex;
   justify-content:center;
   align-items:center;
-  height:100vh;
-  background:#f2f2f2;
+  font-family:'Nunito', sans-serif;
+  background-image:url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854');
+  background-size:cover;
+  background-position:center;
+  overflow:hidden;
 }
 
 .overlay {
-  background:white;
-  padding:20px;
-  border-radius:20px;
-  width:320px;
+  background:rgba(255,255,255,0.25);
+  backdrop-filter:blur(18px);
+  padding:36px;
+  border-radius:32px;
+  width:360px;
   text-align:center;
-  box-shadow:0 10px 25px rgba(0,0,0,0.2);
+  box-shadow:0 16px 40px rgba(0,0,0,0.22);
+}
+
+h1 {
+  font-family:'Fredoka One';
+  color:#1b5e20;
+  margin-bottom:10px;
+}
+
+.stats-row {
+  display:flex;
+  justify-content:space-around;
+  margin-bottom:15px;
+}
+
+.stat-box {
+  background:rgba(255,255,255,0.5);
+  padding:8px 14px;
+  border-radius:12px;
+  font-weight:900;
+  color:#2e7d32;
 }
 
 #appleBtn {
-  width:150px;
-  height:150px;
-  font-size:60px;
-  border-radius:50%;
+  width:200px;
+  height:200px;
   border:none;
-  background:#ff3b3b;
-  color:white;
-  margin:15px 0;
+  border-radius:50%;
+  font-size:90px;
+  cursor:pointer;
+  background:radial-gradient(circle,#fff,#ffb3b3);
+  animation:float 3s infinite;
 }
 
-#leaderboardBox {
+@keyframes float {
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-10px)}
+}
+
+#counter,#message,#niveau {
+  margin-top:10px;
+  font-weight:900;
+}
+
+.progress-wrap {
+  margin-top:10px;
+  height:10px;
+  background:#0002;
+  border-radius:20px;
+  overflow:hidden;
+}
+
+#progressBar {
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#66bb6a,#e53935);
+}
+
+#resetBtn {
   margin-top:15px;
   padding:10px;
-  background:#fafafa;
-  border-radius:12px;
+  border:none;
+  border-radius:20px;
+  background:#e53935;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
 }
-input, button {
+
+/* LEADERBOARD */
+#leaderboardBox {
+  margin-top:15px;
+  background:white;
+  padding:12px;
+  border-radius:15px;
+}
+
+#leaderboardBox h2 {
+  font-size:18px;
+  margin-bottom:8px;
+}
+
+#leaderboard {
+  text-align:left;
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+#pseudo {
   width:100%;
   padding:8px;
-  margin-top:6px;
+  margin-bottom:8px;
+}
+
+#leaderboardBox button {
+  width:100%;
+  padding:8px;
+  border:none;
+  border-radius:10px;
+  background:#43a047;
+  color:white;
+  font-weight:bold;
 }
 </style>
 </head>
@@ -68,158 +138,127 @@ input, button {
 <body>
 
 <div class="overlay">
+  <h1>🍎 Pomme Magique</h1>
 
-<h1>🍎 Pomme</h1>
+  <div class="stats-row">
+    <div class="stat-box">⏱ <span id="timerDisplay">30</span></div>
+    <div class="stat-box">🏆 <span id="bestScore">0</span></div>
+  </div>
 
-<div>Score : <span id="score">0</span></div>
-<div>🏆 Record : <span id="best">0</span></div>
+  <button id="appleBtn">🍎</button>
 
-<button id="appleBtn">🍎</button>
+  <div id="counter">Clics : 0</div>
+  <div id="message">Appuie pour commencer !</div>
+  <div id="niveau">Niveau 1 🌱</div>
 
-<button onclick="resetGame()">Reset</button>
+  <div class="progress-wrap">
+    <div id="progressBar"></div>
+  </div>
 
-<div id="leaderboardBox">
-  <h3>🏆 Classement</h3>
-  <div id="board">Chargement...</div>
+  <button id="resetBtn">🔄 Recommencer</button>
 
-  <input id="name" placeholder="Pseudo">
-  <button onclick="sendScore()">Envoyer</button>
+  <!-- CLASSEMENT -->
+  <div id="leaderboardBox">
+    <h2>🏆 Classement</h2>
+    <div id="leaderboard">Aucun score</div>
+    <input id="pseudo" placeholder="Ton pseudo">
+    <button onclick="sendScore()">Envoyer score</button>
+  </div>
 </div>
 
-</div>
+<div id="timeupMsg" style="display:none;"></div>
 
 <script>
+let clicks=0;
+let bestScore=parseInt(localStorage.getItem("best")||0);
+let timer=30;
+let interval;
+let started=false;
+let gameOver=false;
 
-// ───── VARIABLES ─────
-let score = 0;
-let best = parseInt(localStorage.getItem("best") || 0);
-document.getElementById("best").textContent = best;
+const messages=["Miam ! 😋","Super ! 🔥","Incroyable ! 🎉","Bravo ! 🏆"];
 
-const messages = [
-  "Miam 😋","Croquant 🎵","Délicieux 🌟","Encore ✨",
-  "Super 🍀","Incroyable 🎉","Trop fort 🔥","Bravo 🏆"
-];
+const btn=document.getElementById("appleBtn");
+const counter=document.getElementById("counter");
+const msg=document.getElementById("message");
+const timerDisplay=document.getElementById("timerDisplay");
+const best=document.getElementById("bestScore");
+const progress=document.getElementById("progressBar");
 
-// ───── CLICK ─────
-document.getElementById("appleBtn").onclick = (e) => {
-  score++;
-  document.getElementById("score").textContent = score;
+best.textContent=bestScore;
 
-  // message
-  showMessage(messages[Math.floor(Math.random() * messages.length)], e.clientX, e.clientY);
+function startTimer(){
+  interval=setInterval(()=>{
+    timer--;
+    timerDisplay.textContent=timer;
+    if(timer<=0) end();
+  },1000);
+}
 
-  // son
-  playSound();
+function end(){
+  clearInterval(interval);
+  gameOver=true;
+  if(clicks>bestScore){
+    bestScore=clicks;
+    localStorage.setItem("best",bestScore);
+  }
+}
 
-  // confettis
-  if (score % 10 === 0) launchConfetti();
+btn.onclick=(e)=>{
+  if(gameOver) return;
+
+  if(!started){
+    started=true;
+    startTimer();
+  }
+
+  clicks++;
+  counter.textContent="Clics : "+clicks;
+  msg.textContent=messages[Math.floor(Math.random()*messages.length)];
+
+  if(clicks<20) progress.style.width=(clicks/20*100)+"%";
+  else progress.style.width="100%";
 };
 
-// ───── RESET ─────
-function resetGame() {
-  if (score > best) {
-    best = score;
-    localStorage.setItem("best", best);
-    document.getElementById("best").textContent = best;
-  }
-  score = 0;
-  document.getElementById("score").textContent = 0;
+/* RESET */
+document.getElementById("resetBtn").onclick=()=>{
+  clicks=0;
+  timer=30;
+  started=false;
+  gameOver=false;
+  counter.textContent="Clics : 0";
+  timerDisplay.textContent="30";
+  msg.textContent="Appuie pour commencer !";
+};
+
+/* ───── LEADERBOARD ───── */
+function sendScore(){
+  let name=document.getElementById("pseudo").value || "Joueur";
+
+  let scores=JSON.parse(localStorage.getItem("scores")||"[]");
+
+  scores.push({name,score:clicks});
+  scores.sort((a,b)=>b.score-a.score);
+  scores=scores.slice(0,10);
+
+  localStorage.setItem("scores",JSON.stringify(scores));
+
+  loadScores();
 }
 
-// ───── LEADERBOARD ─────
-function sendScore() {
-  let name = document.getElementById("name").value || "Joueur";
+function loadScores(){
+  let scores=JSON.parse(localStorage.getItem("scores")||"[]");
 
-  let data = JSON.parse(localStorage.getItem("scores") || "[]");
-
-  data.push({ name, score });
-
-  data.sort((a,b) => b.score - a.score);
-
-  data = data.slice(0, 10);
-
-  localStorage.setItem("scores", JSON.stringify(data));
-
-  loadBoard();
-}
-
-function loadBoard() {
-  let data = JSON.parse(localStorage.getItem("scores") || "[]");
-
-  let html = "";
-
-  data.forEach((p,i) => {
-    html += (i+1) + ". " + p.name + " - " + p.score + "<br>";
+  let html="";
+  scores.forEach((s,i)=>{
+    html+=`${i+1}. ${s.name} - ${s.score}<br>`;
   });
 
-  document.getElementById("board").innerHTML = html || "Aucun score";
+  document.getElementById("leaderboard").innerHTML=
+    html || "Aucun score";
 }
 
-// ───── MESSAGE POPUP ─────
-function showMessage(text, x, y) {
-  const el = document.createElement("div");
-  el.textContent = text;
-  el.style.position = "fixed";
-  el.style.left = x + "px";
-  el.style.top = y + "px";
-  el.style.background = "rgba(0,0,0,0.7)";
-  el.style.color = "white";
-  el.style.padding = "6px 10px";
-  el.style.borderRadius = "10px";
-  el.style.transform = "translate(-50%, -50%)";
-  document.body.appendChild(el);
-
-  setTimeout(() => el.remove(), 800);
-}
-
-// ───── SON ─────
-function playSound() {
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-
-  osc.frequency.value = 600;
-  gain.gain.value = 0.1;
-
-  osc.start();
-  osc.stop(ctx.currentTime + 0.1);
-}
-
-// ───── CONFETTIS ─────
-function launchConfetti() {
-  const emojis = ["🍎","🍏","🎉","✨","🏆"];
-
-  for (let i = 0; i < 20; i++) {
-    const c = document.createElement("div");
-    c.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-    c.style.position = "fixed";
-    c.style.left = Math.random() * 100 + "vw";
-    c.style.top = "-20px";
-    c.style.fontSize = "20px";
-    c.style.animation = "fall 2s linear forwards";
-
-    document.body.appendChild(c);
-    setTimeout(() => c.remove(), 2000);
-  }
-}
-
-// animation confetti
-const style = document.createElement("style");
-style.innerHTML = `
-@keyframes fall {
-  to { transform: translateY(110vh) rotate(360deg); opacity: 0; }
-}`;
-document.head.appendChild(style);
-
-// ───── LOAD ─────
-loadBoard();
-
-// ───── ANTI ZOOM ─────
-document.addEventListener("gesturestart", e => e.preventDefault());
-
+loadScores();
 </script>
 
 </body>
