@@ -142,13 +142,20 @@ function startGame() {
 
 /* ================= PSEUDO ================= */
 
-document.getElementById("nameConfirmBtn").onclick = () => {
-  const val = document.getElementById("nameInput").value.trim();
-  if (!val) return;
+window.addEventListener("DOMContentLoaded", () => {
 
-  playerName = val;
-  startGame();
-};
+  const btn = document.getElementById("nameConfirmBtn");
+  const input = document.getElementById("nameInput");
+
+  btn.addEventListener("click", () => {
+    const val = input.value.trim();
+    if (!val) return;
+
+    playerName = val;
+    startGame();
+  });
+
+});
 
 /* ================= GAME ================= */
 
