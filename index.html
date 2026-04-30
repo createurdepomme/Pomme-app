@@ -308,6 +308,10 @@ h2 {
 </div>
 
 <script>
+const supabase = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 document.addEventListener("gesturestart", e => e.preventDefault());
 const SUPABASE_URL = "https://qaofelxfekofzkuhsvir.supabase.co";
 const SUPABASE_KEY = "sb_publishable_SqjV6YlK0Ju1lAEE6imVkw_JtgiTh-j";
