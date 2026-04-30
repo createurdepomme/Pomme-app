@@ -310,30 +310,198 @@ h2 {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
 document.addEventListener("gesturestart", e => e.preventDefault());
 
+// ─────────────────────────────
+// 1. SUPABASE CONFIG (IMPORTANT)
+// ─────────────────────────────
 const SUPABASE_URL = "https://qaofelxfekofzkuhsvir.supabase.co";
-const SUPABASE_KEY = "ta_clé";
+const SUPABASE_KEY = "sb_publishable_SqjV6YlK0Ju1lAEE6imVkw_JtgiTh-j";
 
-const supabase = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
-// ── État ───────────────────────────────────────────────────────
-let clicks        = 0;
-let bestScore     = parseInt(localStorage.getItem('pomme_best') || '0');
-let timerLeft     = 30;
+// ATTENTION : on crée le client APRES les constantes
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ─────────────────────────────
+// 2. ÉTAT DU JEU
+// ─────────────────────────────
+let clicks = 0;
+let bestScore = parseInt(localStorage.getItem('pomme_best') || '0');
+let timerLeft = 30;
 let timerInterval = null;
-let gameStarted   = false;
-let gameOver      = false;
-let playerName    = '';
+let gameStarted = false;
+let gameOver = false;
+let playerName = '';
 
-const messages = [
-  "Miam ! 😋","Croquant ! 🎵","Délicieux ! 🌟","Encore ! ✨",
-  "Super ! 🍀","Oh là là ! 😍","Pomme d'or ! 🏆","Incroyable ! 🎊",
-  "Tu es inarrêtable ! 💪","Génie ! 🧠","Trop fort ! 🔥","Waouw ! 🤩"
-];
+// ─────────────────────────────
+// 3. DOM
+// ─────────────────────────────
+const screenName  = document.getElementById('screen-name');
+const screenGame  = document.getElementById('screen-game');
+const screenEnd   = document.getElementById('screen-end');
+const btn         = document.getElementById('appleBtn');
+const counter     = document.getElementById('counter');
+const messageEl   = document.getElementById('message');
+const niveauEl    = document.getElementById('niveau');
+const progressBar = document.getElementById('progressBar');
+const timerDisp   = document.getElementById('timerDisplay');
+const bestScoreEl = document.getElementById('bestScore');
 
+bestScoreEl.textContent = bestScore;
+
+// ─────────────────────────────
+// 4. NAVIGATION
+// ─────────────────────────────
+function showScreen(screen) {
+  [screenName, screenGame, screenEnd].forEach(s => s.classList.add('hidden'));
+  screen.classList.remove('hidden');
+}
+
+// ─────────────────────────────
+// 5. START GAME
+// ─────────────────────────────
+function startFreshGame() {
+  clicks = 0;
+  timerLeft = 30;
+  gameStarted = false;
+  gameOver = false;
+
+  clearInterval(timerInterval);
+
+  counter.textContent = "Clics : 0";
+  messageEl.textContent = "Appuie pour commencer !";
+  niveauEl.textContent = "Niveau 1 🌱";
+  timerDisp.textContent = "30";
+  progressBar.style.width = "0%";
+
+  showScreen(screenGame);
+}
+
+// ─────────────────────────────
+// 6. TIMER
+// ─────────────────────────────
+function startTimer() {
+  timerInterval = setInterval(() => {
+    timerLeft--;
+    timerDisp.textContent = timerLeft;
+
+    if (timerLeft <= 0) endGame();
+  }, 1000);
+}
+
+// ─────────────────────────────
+// 7. FIN DE PARTIE + SUPABASE
+// ─────────────────────────────
+async function endGame() {
+  clearInterval(timerInterval);
+  gameOver = true;
+
+  if (clicks > bestScore) {
+    bestScore = clicks;
+    localStorage.setItem('pomme_best', bestScore);
+  }
+
+  // 🔥 ENVOI SUR SUPABASE
+  if (playerName) {
+    await supabase.from('scores').insert([
+      {
+        name: playerName,
+        score: clicks
+      }
+    ]);
+  }
+
+  document.getElementById('finalMsg').textContent =
+    `${playerName}, tu as cliqué ${clicks} fois ! 🍎`;
+
+  showScreen(screenEnd);
+  renderLeaderboard();
+}
+
+// ─────────────────────────────
+// 8. CLASSEMENT ONLINE SUPABASE
+// ─────────────────────────────
+async function renderLeaderboard() {
+  const panel = document.getElementById('leaderboard-panel');
+
+  const { data, error } = await supabase
+    .from('scores')
+    .select('*')
+    .order('score', { ascending: false })
+    .limit(10);
+
+  if (error || !data) {
+    panel.innerHTML = "<div>Erreur classement</div>";
+    return;
+  }
+
+  if (!data.length) {
+    panel.innerHTML = "<div class='lb-empty'>Aucun score</div>";
+    return;
+  }
+
+  panel.innerHTML = data.map((e, i) => `
+    <div class="lb-row">
+      <span class="lb-rank">#${i + 1}</span>
+      <span class="lb-name">${e.name}</span>
+      <span class="lb-score">${e.score} 🍎</span>
+    </div>
+  `).join('');
+}
+
+// ─────────────────────────────
+// 9. CLICK GAME
+// ─────────────────────────────
+btn.addEventListener("click", (e) => {
+  if (gameOver) return;
+
+  if (!gameStarted) {
+    gameStarted = true;
+    startTimer();
+  }
+
+  clicks++;
+
+  counter.textContent = "Clics : " + clicks;
+  messageEl.textContent = "🍎 +1";
+
+  spawnParticles(e.clientX, e.clientY);
+});
+
+// ─────────────────────────────
+// 10. PSEUDO
+// ─────────────────────────────
+document.getElementById('nameConfirmBtn').addEventListener('click', () => {
+  const val = document.getElementById('nameInput').value.trim();
+  if (!val) return;
+
+  playerName = val;
+  startFreshGame();
+});
+
+// ─────────────────────────────
+// 11. PARTICULES (simple)
+// ─────────────────────────────
+function spawnParticles(x, y) {
+  const p = document.createElement("div");
+  p.textContent = "🍎";
+  p.style.position = "fixed";
+  p.style.left = x + "px";
+  p.style.top = y + "px";
+  p.style.fontSize = "20px";
+  p.style.pointerEvents = "none";
+  document.body.appendChild(p);
+
+  setTimeout(() => p.remove(), 600);
+}
+
+// ─────────────────────────────
+// 12. RESTART
+// ─────────────────────────────
+document.getElementById('replayBtn').addEventListener('click', startFreshGame);
+</script>
 // ── DOM ────────────────────────────────────────────────────────
 const screenName  = document.getElementById('screen-name');
 const screenGame  = document.getElementById('screen-game');
