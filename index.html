@@ -1,44 +1,126 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pomme</title>
+
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-family: Nunito;
+  background:#f2f2f2;
+}
+
+.card {
+  background:white;
+  padding:25px;
+  border-radius:20px;
+  text-align:center;
+  position:absolute;
+  width:320px;
+}
+
+.hidden {
+  display:none;
+}
+
+button {
+  padding:10px 20px;
+  border:none;
+  border-radius:20px;
+  cursor:pointer;
+}
+
+.btn-green { background:#43a047; color:white; }
+.btn-red { background:#e53935; color:white; }
+
+#appleBtn {
+  font-size:80px;
+  width:180px;
+  height:180px;
+  border-radius:50%;
+}
+</style>
+</head>
+
+<body>
+
+<!-- SCREEN NAME -->
+<div class="card" id="screen-name">
+  <h2>🍎 Pomme</h2>
+  <input id="nameInput" placeholder="Pseudo">
+  <button class="btn-green" id="nameConfirmBtn">Jouer</button>
+</div>
+
+<!-- GAME -->
+<div class="card hidden" id="screen-game">
+  <button id="appleBtn">🍎</button>
+  <div id="counter">0</div>
+</div>
+
+<!-- END -->
+<div class="card hidden" id="screen-end">
+  <div id="finalMsg"></div>
+  <div id="leaderboard-panel"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+/* ================= SUPABASE ================= */
+
 const SUPABASE_URL = "https://qaofelxfekofzkuhsvir.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFhb2ZlbHhmZWtvZnprdWhzdmlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mzg3NjAsImV4cCI6MjA5MzExNDc2MH0.eQI91OCDJVRz-dFr6omZlAlhQtZ06xMslArTduZJRC8";
+const SUPABASE_KEY = "TON_ANON_KEY_ICI";
 
 let supabase = null;
 let clicks = 0;
 let playerName = "";
 
-/* DOM */
-const screenName = document.getElementById("screen-name");
-const screenGame = document.getElementById("screen-game");
-const screenEnd = document.getElementById("screen-end");
+/* ================= START ================= */
 
-const appleBtn = document.getElementById("appleBtn");
-const counter = document.getElementById("counter");
-
-/* NAV */
-function show(screen) {
-  [screenName, screenGame, screenEnd].forEach(s => s.classList.add("hidden"));
-  screen.classList.remove("hidden");
-}
-
-/* GAME START */
-function startGame() {
-  clicks = 0;
-  counter.textContent = "0";
-  show(screenGame);
-}
-
-/* INIT SUPABASE */
-window.addEventListener("load", () => {
-  if (window.supabase) {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    console.log("Supabase OK");
-  }
-});
-
-/* PSEUDO */
 document.addEventListener("DOMContentLoaded", () => {
+
+  const screenName = document.getElementById("screen-name");
+  const screenGame = document.getElementById("screen-game");
+  const screenEnd = document.getElementById("screen-end");
+
+  const btn = document.getElementById("appleBtn");
+  const counter = document.getElementById("counter");
+
   const nameBtn = document.getElementById("nameConfirmBtn");
   const input = document.getElementById("nameInput");
 
+  function show(screen) {
+    [screenName, screenGame, screenEnd].forEach(s => s.classList.add("hidden"));
+    screen.classList.remove("hidden");
+  }
+
+  function startGame() {
+    clicks = 0;
+    counter.textContent = "0";
+    show(screenGame);
+  }
+
+  /* SUPABASE INIT */
+  window.addEventListener("load", () => {
+    if (window.supabase) {
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      console.log("Supabase OK");
+    }
+  });
+
+  /* PSEUDO */
   nameBtn.addEventListener("click", () => {
     const val = input.value.trim();
     if (!val) return;
@@ -50,61 +132,65 @@ document.addEventListener("DOMContentLoaded", () => {
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter") nameBtn.click();
   });
-});
 
-/* CLICK GAME */
-appleBtn.addEventListener("click", () => {
-  clicks++;
-  counter.textContent = clicks;
+  /* CLICK GAME */
+  btn.addEventListener("click", () => {
+    clicks++;
+    counter.textContent = clicks;
 
-  if (clicks >= 10) endGame();
-});
+    if (clicks >= 10) endGame();
+  });
 
-/* END GAME */
-async function endGame() {
-  show(screenEnd);
+  /* END GAME */
+  async function endGame() {
+    show(screenEnd);
 
-  document.getElementById("finalMsg").textContent =
-    `${playerName} : ${clicks} clics`;
+    document.getElementById("finalMsg").textContent =
+      `${playerName} : ${clicks} clics`;
 
-  await saveScore(playerName, clicks);
-  renderLeaderboard();
-}
-
-/* SUPABASE */
-async function saveScore(name, score) {
-  if (!supabase) return;
-
-  const { error } = await supabase
-    .from("scores")
-    .insert([{ name, score }]);
-
-  if (error) console.log(error);
-}
-
-/* LEADERBOARD */
-async function renderLeaderboard() {
-  const panel = document.getElementById("leaderboard-panel");
-
-  if (!supabase) {
-    panel.innerHTML = "Supabase pas prêt";
-    return;
+    await saveScore(playerName, clicks);
+    renderLeaderboard();
   }
 
-  const { data, error } = await supabase
-    .from("scores")
-    .select("*")
-    .order("score", { ascending: false })
-    .limit(10);
+  /* SUPABASE SAVE */
+  async function saveScore(name, score) {
+    if (!supabase) return;
 
-  if (error) {
-    panel.innerHTML = "Erreur leaderboard";
-    return;
+    const { error } = await supabase
+      .from("scores")
+      .insert([{ name, score }]);
+
+    if (error) console.log(error);
   }
 
-  panel.innerHTML = data
-    .map((e, i) => `<div>#${i+1} ${e.name} - ${e.score}</div>`)
-    .join("");
-}
+  /* LEADERBOARD */
+  async function renderLeaderboard() {
+    const panel = document.getElementById("leaderboard-panel");
 
-console.log("JS chargé");
+    if (!supabase) {
+      panel.innerHTML = "Supabase pas prêt";
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("scores")
+      .select("*")
+      .order("score", { ascending: false })
+      .limit(10);
+
+    if (error) {
+      panel.innerHTML = "Erreur leaderboard";
+      return;
+    }
+
+    panel.innerHTML = data
+      .map((e, i) => `<div>#${i+1} ${e.name} - ${e.score}</div>`)
+      .join("");
+  }
+
+  console.log("JS chargé");
+});
+</script>
+
+</body>
+</html>
