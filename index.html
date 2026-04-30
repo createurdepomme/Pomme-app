@@ -524,7 +524,7 @@ function saveScore(name, score) {
   localStorage.setItem(LB_KEY, JSON.stringify(entries));
 }
 
-async function renderLeaderboard() {
+function renderLeaderboard() {
   const panel = document.getElementById('leaderboard-panel');
   panel.innerHTML = '<div class="lb-loading">Chargement... 🍎</div>';
  const entries = loadLeaderboard();
