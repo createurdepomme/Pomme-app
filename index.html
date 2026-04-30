@@ -309,7 +309,8 @@ h2 {
 
 <script>
 document.addEventListener("gesturestart", e => e.preventDefault());
-
+const SUPABASE_URL = "https://qaofelxfekofzkuhsvir.supabase.co";
+const SUPABASE_KEY = "sb_publishable_SqjV6YlK0Ju1lAEE6imVkw_JtgiTh-j";
 // ── État ───────────────────────────────────────────────────────
 let clicks        = 0;
 let bestScore     = parseInt(localStorage.getItem('pomme_best') || '0');
