@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -227,10 +228,12 @@ h2 {
   100%{ transform:translateY(-90px) scale(1); opacity:0; }
 }
 </style>
+
 </head>
 <body>
 
 <!-- ════ ÉCRAN 1 : PSEUDO ════ -->
+
 <div class="card" id="screen-name">
   <h1>🍎 Pomme</h1>
   <p>Entre ton pseudo pour jouer !</p>
@@ -239,6 +242,7 @@ h2 {
 </div>
 
 <!-- ════ ÉCRAN 2 : JEU ════ -->
+
 <div class="card hidden" id="screen-game">
   <h1>Pomme</h1>
   <div class="stats-row">
@@ -254,6 +258,7 @@ h2 {
 </div>
 
 <!-- ════ ÉCRAN 3 : FIN + CLASSEMENT ════ -->
+
 <div class="card hidden" id="screen-end">
   <h2>⏰ Temps écoulé !</h2>
   <div id="finalMsg"></div>
@@ -267,13 +272,23 @@ h2 {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
 document.addEventListener("gesturestart", e => e.preventDefault());
 
-// ── Supabase ───────────────────────────────────────────────────
+// ── Supabase (initialisation protégée) ────────────────────────
 const SUPABASE_URL = "https://qaofelxfekofzkuhsvir.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFhb2ZlbHhmZWtvZnprdWhzdmlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mzg3NjAsImV4cCI6MjA5MzExNDc2MH0.eQI91OCDJVRz-dFr6omZlAlhQtZ06xMslArTduZJRC8";
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ✅ CORRECTION : on entoure l'init Supabase dans un try/catch.
+// Si le script CDN n'a pas chargé (réseau lent, bloqué…), db reste
+// null et le jeu fonctionne quand même sans classement.
+let db = null;
+try {
+  db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+} catch (e) {
+  console.warn('Supabase non disponible – classement désactivé.', e);
+}
 
 // ── État ───────────────────────────────────────────────────────
 let clicks        = 0;
@@ -440,59 +455,78 @@ btn.addEventListener("click", (e) => {
 });
 
 // ── Supabase : sauvegarder le score ───────────────────────────
+// ✅ CORRECTION : on vérifie que db n'est pas null avant d'appeler Supabase
 async function saveScore(name, score) {
+  if (!db) return;
   try {
-    // On garde uniquement le meilleur score par joueur
-    const { data: existing } = await db
+    // ✅ maybeSingle() retourne null (pas d'erreur) si aucune ligne trouvée
+    const { data: existing, error: selectError } = await db
       .from('scores')
       .select('id, score')
       .eq('name', name)
-      .single();
+      .maybeSingle();
+
+    if (selectError) {
+      console.warn('Erreur saveScore (select):', selectError.message || JSON.stringify(selectError));
+      return;
+    }
 
     if (existing) {
       if (score > existing.score) {
-        await db.from('scores').update({ score }).eq('id', existing.id);
+        const { error: updateError } = await db.from('scores').update({ score }).eq('id', existing.id);
+        if (updateError) console.warn('Erreur saveScore (update):', updateError.message);
       }
     } else {
-      await db.from('scores').insert([{ name, score }]);
+      const { error: insertError } = await db.from('scores').insert([{ name, score }]);
+      if (insertError) console.warn('Erreur saveScore (insert):', insertError.message);
     }
   } catch (e) {
-    console.log('Erreur saveScore:', e);
+    console.warn('Erreur saveScore (exception):', e.message || e);
   }
 }
 
 // ── Supabase : afficher le classement ─────────────────────────
+// ✅ CORRECTION : on vérifie que db n'est pas null avant d'appeler Supabase
+
 async function renderLeaderboard() {
   const panel = document.getElementById('leaderboard-panel');
+
+  if (!db) {
+    panel.innerHTML = '<div class="lb-empty">Classement indisponible 😕</div>';
+    return;
+  }
+
   panel.innerHTML = '<div class="lb-loading">Chargement... 🍎</div>';
+
   try {
     const { data, error } = await db
       .from('scores')
-      .select('name, score')
+      .select('*')
       .order('score', { ascending: false })
       .limit(20);
 
-    if (error) throw error;
-    if (!data || !data.length) {
-      panel.innerHTML = '<div class="lb-empty">Aucun score encore. Sois le premier ! 🍎</div>';
+    if (error) {
+      console.log("ERREUR SUPABASE :", error);
+      panel.innerHTML = '<div class="lb-empty">Erreur classement 😕</div>';
       return;
     }
 
-    const medals  = ['🥇','🥈','🥉'];
-    const classes = ['gold','silver','bronze'];
-    panel.innerHTML = data.map((e, i) => {
-      const isMe = e.name === playerName;
-      const cls  = (i < 3 ? classes[i] : '') + (isMe ? ' me' : '');
-      const rank = i < 3 ? medals[i] : `#${i+1}`;
-      return `<div class="lb-row ${cls}">
-        <span class="lb-rank">${rank}</span>
+    if (!data || data.length === 0) {
+      panel.innerHTML = '<div class="lb-empty">Aucun score 🍎</div>';
+      return;
+    }
+
+    panel.innerHTML = data.map((e, i) => `
+      <div class="lb-row">
+        <span class="lb-rank">#${i + 1}</span>
         <span class="lb-name">${escHtml(e.name)}</span>
         <span class="lb-score">${e.score} 🍎</span>
-      </div>`;
-    }).join('');
-  } catch (e) {
-    panel.innerHTML = '<div class="lb-empty">Erreur de connexion 😕</div>';
-    console.log('Erreur leaderboard:', e);
+      </div>
+    `).join('');
+
+  } catch (err) {
+    console.log("ERREUR JS :", err);
+    panel.innerHTML = '<div class="lb-empty">Erreur réseau 😕</div>';
   }
 }
 
@@ -541,5 +575,6 @@ function showPopup(x, y, text) {
   setTimeout(() => p.remove(), 900);
 }
 </script>
+
 </body>
 </html>
