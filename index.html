@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Pomme</title> 
+<title>Pomme</title>
 <link rel="icon" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,14 +12,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 
 <style>
-html, body {
-  touch-action: manipulation;
-}
-
-button {
-  touch-action: manipulation;
-}
-  * { margin:0; padding:0; box-sizing:border-box; }
+html, body { touch-action: manipulation; }
+button { touch-action: manipulation; }
+* { margin:0; padding:0; box-sizing:border-box; }
 
 body {
   min-height: 100vh;
@@ -33,33 +28,92 @@ body {
   overflow: hidden;
 }
 
-/* Overlay flouté moderne */
-.overlay {
+/* ── Carte générique ── */
+.card {
   background: rgba(255,255,255,0.25);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   border: 1.5px solid rgba(255,255,255,0.5);
-  padding: 36px 32px 32px;
   border-radius: 32px;
   text-align: center;
-  width: 360px;
   box-shadow: 0 16px 40px rgba(0,0,0,0.22);
-  position: relative;
+  position: absolute;
+  width: 360px;
+  padding: 32px 28px 28px;
+  transition: opacity 0.35s, transform 0.35s;
+}
+.card.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.95);
 }
 
+/* ── Titres ── */
 h1 {
   font-family: 'Fredoka One', cursive;
-  font-size: 2rem;
+  font-size: 2.2rem;
   color: #1b5e20;
   text-shadow: 1px 2px 0 rgba(255,255,255,0.6);
   margin-bottom: 6px;
 }
+h2 {
+  font-family: 'Fredoka One', cursive;
+  font-size: 1.6rem;
+  color: #1b5e20;
+  text-shadow: 1px 2px 0 rgba(255,255,255,0.5);
+  margin-bottom: 10px;
+}
 
-/* Timer + meilleur score */
+/* ── Boutons ── */
+.btn-green, .btn-red {
+  padding: 10px 26px;
+  font-family: 'Fredoka One', cursive;
+  font-size: 1rem;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.btn-red   { background: linear-gradient(135deg,#e53935,#b71c1c); box-shadow: 0 4px 0 #7f0000; }
+.btn-green { background: linear-gradient(135deg,#43a047,#1b5e20); box-shadow: 0 4px 0 #0a3d0a; }
+.btn-red:hover,   .btn-green:hover  { transform: translateY(-2px); }
+.btn-red:active   { transform: translateY(1px); box-shadow: 0 2px 0 #7f0000; }
+.btn-green:active { transform: translateY(1px); box-shadow: 0 2px 0 #0a3d0a; }
+
+/* ════════════════════════════════════
+   ÉCRAN 1 — PSEUDO
+════════════════════════════════════ */
+#screen-name p {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2e7d32;
+  margin-bottom: 18px;
+}
+#nameInput {
+  padding: 10px 18px;
+  font-family: 'Fredoka One', cursive;
+  font-size: 1.2rem;
+  border-radius: 50px;
+  border: 2px solid rgba(255,255,255,0.8);
+  background: rgba(255,255,255,0.85);
+  color: #1b5e20;
+  text-align: center;
+  outline: none;
+  width: 220px;
+  margin-bottom: 18px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ════════════════════════════════════
+   ÉCRAN 2 — JEU
+════════════════════════════════════ */
 .stats-row {
   display: flex;
   justify-content: space-around;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 .stat-box {
   background: rgba(255,255,255,0.5);
@@ -76,7 +130,6 @@ h1 {
   color: #c62828;
 }
 
-/* Bouton pomme */
 #appleBtn {
   width: 200px;
   height: 200px;
@@ -87,56 +140,37 @@ h1 {
   background: radial-gradient(circle at 35% 35%, #fff 0%, #ffe0e0 60%, #ffb3b3 100%);
   box-shadow: 0 8px 24px rgba(0,0,0,0.22), inset 0 -4px 10px rgba(0,0,0,0.08);
   transition: transform 0.12s, box-shadow 0.12s;
-  position: relative;
   animation: floatBtn 3s ease-in-out infinite;
   outline: none;
 }
-
-#appleBtn:hover {
-  transform: scale(1.07);
-  box-shadow: 0 14px 34px rgba(0,0,0,0.28);
-}
-
-#appleBtn:active {
-  transform: scale(0.9);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
-}
-
+#appleBtn:hover  { transform: scale(1.07); box-shadow: 0 14px 34px rgba(0,0,0,0.28); }
+#appleBtn:active { transform: scale(0.9);  box-shadow: 0 4px 12px rgba(0,0,0,0.18); }
 @keyframes floatBtn {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-10px); }
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-10px); }
 }
 
-/* Compteur */
 #counter {
   font-family: 'Fredoka One', cursive;
   font-size: 1.8rem;
   color: #1b5e20;
-  margin-top: 18px;
+  margin-top: 14px;
 }
-
-/* Message */
 #message {
-  margin-top: 10px;
-  font-size: 1.1rem;
+  margin-top: 8px;
+  font-size: 1.05rem;
   font-weight: 900;
   color: #2e7d32;
-  min-height: 28px;
-  transition: opacity 0.3s;
+  min-height: 26px;
 }
-
-/* Niveau */
 #niveau {
-  margin-top: 8px;
+  margin-top: 6px;
   font-size: 0.85rem;
   font-weight: 700;
   color: #555;
-  letter-spacing: 0.5px;
 }
-
-/* Barre de progression vers prochain bonus */
 .progress-wrap {
-  margin-top: 14px;
+  margin-top: 10px;
   background: rgba(0,0,0,0.1);
   border-radius: 20px;
   height: 10px;
@@ -145,177 +179,167 @@ h1 {
 #progressBar {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, #66bb6a, #e53935);
+  background: linear-gradient(90deg,#66bb6a,#e53935);
   border-radius: 20px;
   transition: width 0.2s ease;
 }
-
-/* Bouton reset */
 #resetBtn {
-  margin-top: 16px;
-  padding: 8px 24px;
-  font-family: 'Fredoka One', cursive;
-  font-size: 1rem;
-  background: linear-gradient(135deg, #e53935, #b71c1c);
-  color: white;
-  border: none;
-  border-radius: 50px;
-  cursor: pointer;
-  box-shadow: 0 4px 0 #7f0000;
-  transition: transform 0.1s;
+  margin-top: 14px;
 }
-#resetBtn:hover { transform: translateY(-2px); }
-#resetBtn:active { transform: translateY(1px); box-shadow: 0 2px 0 #7f0000; }
 
-/* Flash animation */
-.flash {
-  animation: flashAnim 0.55s ease;
+/* ════════════════════════════════════
+   ÉCRAN 3 — FIN + CLASSEMENT
+════════════════════════════════════ */
+#screen-end { padding: 24px 20px 20px; }
+
+#finalMsg {
+  font-size: 1rem;
+  font-weight: 900;
+  color: #1b5e20;
+  margin-bottom: 14px;
 }
+
+/* Classement */
+#leaderboard-panel {
+  width: 100%;
+  max-height: 260px;
+  overflow-y: auto;
+  margin-bottom: 14px;
+}
+#leaderboard-panel::-webkit-scrollbar { width: 5px; }
+#leaderboard-panel::-webkit-scrollbar-thumb { background: rgba(0,100,0,0.25); border-radius: 10px; }
+
+.lb-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 14px;
+  margin-bottom: 5px;
+  background: rgba(255,255,255,0.35);
+  font-weight: 900;
+  color: #1b5e20;
+  font-size: 0.9rem;
+}
+.lb-row.gold   { background: rgba(255,215,0,0.4); }
+.lb-row.silver { background: rgba(192,192,192,0.4); }
+.lb-row.bronze { background: rgba(205,127,50,0.35); }
+.lb-row.me     { background: rgba(100,220,100,0.4); outline: 2px solid #43a047; }
+
+.lb-rank  { font-family:'Fredoka One',cursive; font-size:1.1rem; width:26px; text-align:center; }
+.lb-name  { flex:1; }
+.lb-score { font-family:'Fredoka One',cursive; font-size:1rem; color:#c62828; }
+
+.lb-empty, .lb-loading {
+  text-align: center;
+  color: #555;
+  font-size: 0.9rem;
+  padding: 16px 0;
+}
+.lb-loading { animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+.btn-row { display:flex; gap:10px; justify-content:center; }
+
+/* ── Animations ── */
+.flash { animation: flashAnim 0.55s ease; }
 @keyframes flashAnim {
   0%   { transform: scale(1) rotate(0deg); }
   25%  { transform: scale(1.28) rotate(8deg); }
   60%  { transform: scale(0.93) rotate(-6deg); }
   100% { transform: scale(1) rotate(0deg); }
 }
-
-/* Shake screen */
-.shake {
-  animation: shakeAnim 0.4s ease;
-}
+.shake { animation: shakeAnim 0.4s ease; }
 @keyframes shakeAnim {
-  0%,100% { transform: translateX(0); }
-  20%     { transform: translateX(-8px); }
-  40%     { transform: translateX(8px); }
-  60%     { transform: translateX(-5px); }
-  80%     { transform: translateX(5px); }
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-8px)}
+  40%{transform:translateX(8px)}
+  60%{transform:translateX(-5px)}
+  80%{transform:translateX(5px)}
 }
 
-/* Confettis */
+/* ── Effets visuels ── */
 .confetti {
-  position: fixed;
-  animation: fall linear forwards;
-  pointer-events: none;
-  z-index: 999;
+  position: fixed; animation: fall linear forwards;
+  pointer-events: none; z-index: 999;
 }
 @keyframes fall {
-  0%   { transform: translateY(-60px) rotate(0deg); opacity: 1; }
-  100% { transform: translateY(110vh) rotate(540deg); opacity: 0; }
+  0%  { transform:translateY(-60px) rotate(0deg); opacity:1; }
+  100%{ transform:translateY(110vh) rotate(540deg); opacity:0; }
 }
-
-/* Particules explosion */
 .particle {
-  position: fixed;
-  pointer-events: none;
-  font-size: 1.6rem;
-  animation: burst 0.8s ease-out forwards;
-  z-index: 998;
+  position:fixed; pointer-events:none;
+  font-size:1.6rem; animation:burst 0.8s ease-out forwards; z-index:998;
 }
 @keyframes burst {
-  0%   { transform: translate(0,0) scale(1.2); opacity: 1; }
-  100% { transform: translate(var(--dx), var(--dy)) scale(0.2); opacity: 0; }
+  0%  { transform:translate(0,0) scale(1.2); opacity:1; }
+  100%{ transform:translate(var(--dx),var(--dy)) scale(0.2); opacity:0; }
 }
-
-/* Score popup */
 .score-popup {
-  position: fixed;
-  font-family: 'Fredoka One', cursive;
-  font-size: 1.6rem;
-  color: #fff;
-  text-shadow: 1px 1px 0 #c62828, -1px -1px 0 #c62828;
-  pointer-events: none;
-  animation: popUp 0.9s ease-out forwards;
-  z-index: 997;
+  position:fixed; font-family:'Fredoka One',cursive; font-size:1.6rem;
+  color:#fff; text-shadow:1px 1px 0 #c62828,-1px -1px 0 #c62828;
+  pointer-events:none; animation:popUp 0.9s ease-out forwards; z-index:997;
 }
 @keyframes popUp {
-  0%   { transform: translateY(0) scale(0.5); opacity: 1; }
-  60%  { transform: translateY(-50px) scale(1.3); opacity: 1; }
-  100% { transform: translateY(-90px) scale(1); opacity: 0; }
+  0%  { transform:translateY(0) scale(0.5); opacity:1; }
+  60% { transform:translateY(-50px) scale(1.3); opacity:1; }
+  100%{ transform:translateY(-90px) scale(1); opacity:0; }
 }
-
-/* Timer terminé */
-#timeupMsg {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(6px);
-  z-index: 1000;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-}
-#timeupMsg h2 {
-  font-family: 'Fredoka One', cursive;
-  font-size: 2.5rem;
-  color: #fff;
-  text-shadow: 2px 2px 0 #c62828;
-}
-#timeupMsg p {
-  font-size: 1.2rem;
-  font-weight: 900;
-  color: #ffe;
-  text-align: center;
-}
-#timeupMsg button {
-  padding: 14px 40px;
-  font-family: 'Fredoka One', cursive;
-  font-size: 1.3rem;
-  background: linear-gradient(135deg, #43a047, #1b5e20);
-  color: white;
-  border: none;
-  border-radius: 50px;
-  cursor: pointer;
-  box-shadow: 0 4px 0 #0a3d0a;
-  margin-top: 6px;
-}
-document.addEventListener("gesturestart", function(e) {
-  e.preventDefault();
-});
 </style>
 
 </head>
-
 <body>
 
-<div class="overlay" id="overlay">
-  <h1>Pomme</h1>
+<!-- ════ ÉCRAN 1 : PSEUDO ════ -->
 
+<div class="card" id="screen-name">
+  <h1>🍎 Pomme</h1>
+  <p>Entre ton pseudo pour jouer !</p>
+  <input type="text" id="nameInput" maxlength="16" placeholder="Ton pseudo..." autocomplete="off" />
+  <button class="btn-green" id="nameConfirmBtn">🍎 Jouer !</button>
+</div>
+
+<!-- ════ ÉCRAN 2 : JEU ════ -->
+
+<div class="card hidden" id="screen-game">
+  <h1>Pomme</h1>
   <div class="stats-row">
     <div class="stat-box">⏱ Temps<span id="timerDisplay">30</span></div>
     <div class="stat-box">🏆 Record<span id="bestScore">0</span></div>
   </div>
-
-<button id="appleBtn">🍎</button>
-
+  <button id="appleBtn">🍎</button>
   <div id="counter">Clics : 0</div>
   <div id="message">Appuie pour commencer !</div>
   <div id="niveau">Niveau 1 🌱</div>
-
-  <div class="progress-wrap">
-    <div id="progressBar"></div>
-  </div>
-
-<button id="resetBtn">🔄 Recommencer</button>
-
+  <div class="progress-wrap"><div id="progressBar"></div></div>
+  <button class="btn-red" id="resetBtn">🔄 Recommencer</button>
 </div>
 
-<!-- Écran fin de partie -->
+<!-- ════ ÉCRAN 3 : FIN + CLASSEMENT ════ -->
 
-<div id="timeupMsg">
+<div class="card hidden" id="screen-end">
   <h2>⏰ Temps écoulé !</h2>
-  <p id="finalMsg"></p>
-  <button onclick="resetGame()">🔄 Rejouer</button>
+  <div id="finalMsg"></div>
+  <div id="leaderboard-panel">
+    <div class="lb-loading">Chargement... 🍎</div>
+  </div>
+  <div class="btn-row">
+    <button class="btn-green" id="replayBtn">🔄 Rejouer</button>
+    <button class="btn-red"   id="changeNameBtn">👤 Changer</button>
+  </div>
 </div>
 
 <script>
-// ── État du jeu ────────────────────────────────────────────────
-let clicks      = 0;
-let bestScore   = parseInt(localStorage.getItem('pomme_best') || '0');
-let timerLeft   = 30;
+document.addEventListener("gesturestart", e => e.preventDefault());
+
+// ── État ───────────────────────────────────────────────────────
+let clicks        = 0;
+let bestScore     = parseInt(localStorage.getItem('pomme_best') || '0');
+let timerLeft     = 30;
 let timerInterval = null;
-let gameStarted = false;
-let gameOver    = false;
+let gameStarted   = false;
+let gameOver      = false;
+let playerName    = '';
 
 const messages = [
   "Miam ! 😋","Croquant ! 🎵","Délicieux ! 🌟","Encore ! ✨",
@@ -323,45 +347,88 @@ const messages = [
   "Tu es inarrêtable ! 💪","Génie ! 🧠","Trop fort ! 🔥","Waouw ! 🤩"
 ];
 
-// ── Éléments DOM ───────────────────────────────────────────────
-const btn          = document.getElementById("appleBtn");
-const counter      = document.getElementById("counter");
-const messageEl    = document.getElementById("message");
-const niveauEl     = document.getElementById("niveau");
-const progressBar  = document.getElementById("progressBar");
-const timerDisplay = document.getElementById("timerDisplay");
-const bestScoreEl  = document.getElementById("bestScore");
-const timeupMsg    = document.getElementById("timeupMsg");
-const finalMsg     = document.getElementById("finalMsg");
-const overlay      = document.getElementById("overlay");
+// ── DOM ────────────────────────────────────────────────────────
+const screenName = document.getElementById('screen-name');
+const screenGame = document.getElementById('screen-game');
+const screenEnd  = document.getElementById('screen-end');
+const btn        = document.getElementById('appleBtn');
+const counter    = document.getElementById('counter');
+const messageEl  = document.getElementById('message');
+const niveauEl   = document.getElementById('niveau');
+const progressBar= document.getElementById('progressBar');
+const timerDisp  = document.getElementById('timerDisplay');
+const bestScoreEl= document.getElementById('bestScore');
+const overlay    = document.getElementById('screen-game');
 
 bestScoreEl.textContent = bestScore;
 
-// ── Web Audio API (son sans fichier externe) ───────────────────
+// ── Navigation écrans ──────────────────────────────────────────
+function showScreen(screen) {
+  [screenName, screenGame, screenEnd].forEach(s => s.classList.add('hidden'));
+  screen.classList.remove('hidden');
+}
+
+// ── Écran 1 : Pseudo ──────────────────────────────────────────
+document.getElementById('nameConfirmBtn').addEventListener('click', confirmName);
+document.getElementById('nameInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') confirmName();
+});
+
+function confirmName() {
+  const val = document.getElementById('nameInput').value.trim();
+  if (!val) { document.getElementById('nameInput').focus(); return; }
+  playerName = val;
+  localStorage.setItem('pomme_name', playerName);
+  startFreshGame();
+}
+
+// ── Écran 2 : Jeu ─────────────────────────────────────────────
+function startFreshGame() {
+  clicks = 0; timerLeft = 30; gameStarted = false; gameOver = false;
+  clearInterval(timerInterval);
+  counter.textContent      = "Clics : 0";
+  messageEl.textContent    = "Appuie pour commencer !";
+  niveauEl.textContent     = "Niveau 1 🌱";
+  timerDisp.textContent    = "30";
+  timerDisp.parentElement.style.color = '#2e7d32';
+  progressBar.style.width  = "0%";
+  btn.textContent          = "🍎";
+  bestScoreEl.textContent  = bestScore;
+  showScreen(screenGame);
+}
+
+// Bouton recommencer (même joueur)
+document.getElementById('resetBtn').addEventListener('click', startFreshGame);
+
+// Bouton recommencer depuis l'écran fin
+document.getElementById('replayBtn').addEventListener('click', startFreshGame);
+
+// Bouton changer de nom
+document.getElementById('changeNameBtn').addEventListener('click', () => {
+  document.getElementById('nameInput').value = '';
+  showScreen(screenName);
+});
+
+// ── Audio ──────────────────────────────────────────────────────
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function playClick() {
-  const osc  = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
+  const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+  osc.connect(gain); gain.connect(audioCtx.destination);
   osc.type = 'sine';
   osc.frequency.setValueAtTime(520, audioCtx.currentTime);
   osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.08);
   gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.12);
+  osc.start(); osc.stop(audioCtx.currentTime + 0.12);
 }
 
 function playBonus() {
   [0, 0.12, 0.24].forEach((delay, i) => {
-    const osc  = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
+    const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime([523, 659, 784][i], audioCtx.currentTime + delay);
+    osc.frequency.setValueAtTime([523,659,784][i], audioCtx.currentTime + delay);
     gain.gain.setValueAtTime(0.3, audioCtx.currentTime + delay);
     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + 0.2);
     osc.start(audioCtx.currentTime + delay);
@@ -373,49 +440,48 @@ function playBonus() {
 function startTimer() {
   timerInterval = setInterval(() => {
     timerLeft--;
-    timerDisplay.textContent = timerLeft;
-    if (timerLeft <= 5) timerDisplay.parentElement.style.color = '#c62828';
+    timerDisp.textContent = timerLeft;
+    if (timerLeft <= 5) timerDisp.parentElement.style.color = '#c62828';
     if (timerLeft <= 0) endGame();
   }, 1000);
 }
 
-function endGame() {
+async function endGame() {
   clearInterval(timerInterval);
   gameOver = true;
   if (clicks > bestScore) {
     bestScore = clicks;
     localStorage.setItem('pomme_best', bestScore);
   }
-  finalMsg.textContent = `Tu as cliqué ${clicks} fois ! 🍎  Record : ${bestScore}`;
-  timeupMsg.style.display = 'flex';
+
+if (playerName) saveScore(playerName, clicks);
+  document.getElementById('finalMsg').textContent =
+    `${playerName}, tu as cliqué ${clicks} fois ! 🍎  Ton record : ${bestScore}`;
+  showScreen(screenEnd);
+  renderLeaderboard();
 }
 
 // ── Niveau ─────────────────────────────────────────────────────
 function getNiveau(n) {
-  if (n < 20)  return { label: "Niveau 1 🌱", next: 20 };
-  if (n < 50)  return { label: "Niveau 2 🍀", next: 50 };
-  if (n < 100) return { label: "Niveau 3 🔥", next: 100 };
-  if (n < 200) return { label: "Niveau 4 ⚡", next: 200 };
-  return { label: "Niveau MAX 👑", next: null };
+  if (n < 20)  return { label:"Niveau 1 🌱", next:20 };
+  if (n < 50)  return { label:"Niveau 2 🍀", next:50 };
+  if (n < 100) return { label:"Niveau 3 🔥", next:100 };
+  if (n < 200) return { label:"Niveau 4 ⚡", next:200 };
+  return { label:"Niveau MAX 👑", next:null };
 }
 
 // ── Clic principal ─────────────────────────────────────────────
 btn.addEventListener("click", (e) => {
   if (gameOver) return;
   if (!gameStarted) { gameStarted = true; startTimer(); }
-
   audioCtx.resume();
   clicks++;
   playClick();
-
-  counter.textContent = "Clics : " + clicks;
+  counter.textContent   = "Clics : " + clicks;
   messageEl.textContent = messages[Math.floor(Math.random() * messages.length)];
 
-  // Niveau
   const niv = getNiveau(clicks);
   niveauEl.textContent = niv.label;
-
-  // Barre de progression
   if (niv.next) {
     const prev = clicks < 20 ? 0 : clicks < 50 ? 20 : clicks < 100 ? 50 : 100;
     progressBar.style.width = ((clicks - prev) / (niv.next - prev) * 100) + '%';
@@ -423,45 +489,68 @@ btn.addEventListener("click", (e) => {
     progressBar.style.width = '100%';
   }
 
-  // Particules à chaque clic
   spawnParticles(e.clientX, e.clientY);
   showPopup(e.clientX, e.clientY, "+1");
 
-  // Bonus tous les 10 clics
   if (clicks % 10 === 0) {
     playBonus();
     btn.textContent = btn.textContent === "🍎" ? "🍏" : "🍎";
-    btn.classList.remove("flash");
-    void btn.offsetWidth;
-    btn.classList.add("flash");
-    overlay.classList.remove("shake");
-    void overlay.offsetWidth;
-    overlay.classList.add("shake");
+    btn.classList.remove("flash"); void btn.offsetWidth; btn.classList.add("flash");
+    overlay.classList.remove("shake"); void overlay.offsetWidth; overlay.classList.add("shake");
     launchConfetti();
     showPopup(e.clientX, e.clientY - 30, "BONUS ! 🎉");
   }
 });
 
-// ── Reset ──────────────────────────────────────────────────────
-document.getElementById("resetBtn").addEventListener("click", resetGame);
-function resetGame() {
-  clicks      = 0;
-  timerLeft   = 30;
-  gameStarted = false;
-  gameOver    = false;
-  clearInterval(timerInterval);
-  counter.textContent        = "Clics : 0";
-  messageEl.textContent      = "Appuie pour commencer !";
-  niveauEl.textContent       = "Niveau 1 🌱";
-  timerDisplay.textContent   = "30";
-  timerDisplay.parentElement.style.color = '#2e7d32';
-  progressBar.style.width    = "0%";
-  btn.textContent            = "🍎";
-  bestScoreEl.textContent    = bestScore;
-  timeupMsg.style.display    = "none";
+// ── Classement ─────────────────────────────────────────────────
+const LB_KEY = 'pomme-leaderboard-v1';
+
+function saveScore(name, score) {
+  let entries = loadLeaderboard();
+
+  const idx = entries.findIndex(e => e.name === name);
+
+  if (idx >= 0) {
+    if (score > entries[idx].score) {
+      entries[idx].score = score;
+    }
+  } else {
+    entries.push({ name, score });
+  }
+
+  entries.sort((a, b) => b.score - a.score);
+  entries = entries.slice(0, 20);
+
+  localStorage.setItem(LB_KEY, JSON.stringify(entries));
 }
 
-// ── Confettis ──────────────────────────────────────────────────
+async function renderLeaderboard() {
+  const panel = document.getElementById('leaderboard-panel');
+  panel.innerHTML = '<div class="lb-loading">Chargement... 🍎</div>';
+ const entries = loadLeaderboard();
+  if (!entries.length) {
+    panel.innerHTML = '<div class="lb-empty">Aucun score encore. Sois le premier ! 🍎</div>';
+    return;
+  }
+  const medals  = ['🥇','🥈','🥉'];
+  const classes = ['gold','silver','bronze'];
+  panel.innerHTML = entries.map((e, i) => {
+    const isMe = e.name === playerName;
+    const cls  = (i < 3 ? classes[i] : '') + (isMe ? ' me' : '');
+    const rank = i < 3 ? medals[i] : `#${i+1}`;
+    return `<div class="lb-row ${cls}">
+      <span class="lb-rank">${rank}</span>
+      <span class="lb-name">${escHtml(e.name)}</span>
+      <span class="lb-score">${e.score} 🍎</span>
+    </div>`;
+  }).join('');
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Effets visuels ─────────────────────────────────────────────
 function launchConfetti() {
   const items = ["🍎","🍏","✨","🌟","🎉","🏆","💥"];
   for (let i = 0; i < 22; i++) {
@@ -477,7 +566,6 @@ function launchConfetti() {
   }
 }
 
-// ── Particules explosion ───────────────────────────────────────
 function spawnParticles(x, y) {
   const emojis = ["🍎","✨","🌿","⭐","🍃","💫"];
   for (let i = 0; i < 5; i++) {
@@ -488,20 +576,17 @@ function spawnParticles(x, y) {
     const dist  = 50 + Math.random() * 70;
     p.style.setProperty("--dx", Math.cos(angle) * dist + "px");
     p.style.setProperty("--dy", Math.sin(angle) * dist - 30 + "px");
-    p.style.left = x + "px";
-    p.style.top  = y + "px";
+    p.style.left = x + "px"; p.style.top = y + "px";
     document.body.appendChild(p);
     setTimeout(() => p.remove(), 800);
   }
 }
 
-// ── Score popup ────────────────────────────────────────────────
 function showPopup(x, y, text) {
   const p = document.createElement("div");
   p.className = "score-popup";
   p.textContent = text;
-  p.style.left = x + "px";
-  p.style.top  = y + "px";
+  p.style.left = x + "px"; p.style.top = y + "px";
   document.body.appendChild(p);
   setTimeout(() => p.remove(), 900);
 }
