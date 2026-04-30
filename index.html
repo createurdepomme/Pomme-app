@@ -1,238 +1,461 @@
 <!DOCTYPE html>
+
 <html lang="fr">
+
 <head>
+
 <meta charset="UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <title>Pomme</title>
 
 <link rel="icon" href="icon.png">
+
 <link rel="apple-touch-icon" href="icon.png">
 
 <meta name="apple-mobile-web-app-capable" content="yes">
+
 <meta name="apple-mobile-web-app-title" content="Pomme">
 
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 
 <style>
+
 html, body {
+
   touch-action: manipulation;
+
 }
 
 button {
+
   touch-action: manipulation;
+
 }
 
-* { margin:0; padding:0; box-sizing:border-box; }
+* {
+
+  margin:0;
+
+  padding:0;
+
+  box-sizing:border-box;
+
+}
 
 body {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-family: 'Nunito', sans-serif;
-  background-image: url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854');
-  background-size: cover;
-  background-position: center;
-  overflow: hidden;
+
+  min-height:100vh;
+
+  display:flex;
+
+  justify-content:center;
+
+  align-items:center;
+
+  font-family:'Nunito', sans-serif;
+
+  background:url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854') center/cover;
+
+  overflow:hidden;
+
 }
 
 .overlay {
-  background: rgba(255,255,255,0.25);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1.5px solid rgba(255,255,255,0.5);
-  padding: 36px;
-  border-radius: 32px;
-  text-align: center;
-  width: 360px;
-  box-shadow: 0 16px 40px rgba(0,0,0,0.22);
+
+  background:rgba(255,255,255,0.25);
+
+  backdrop-filter:blur(18px);
+
+  -webkit-backdrop-filter:blur(18px);
+
+  border:1.5px solid rgba(255,255,255,0.5);
+
+  padding:30px;
+
+  border-radius:32px;
+
+  text-align:center;
+
+  width:360px;
+
+  box-shadow:0 16px 40px rgba(0,0,0,0.22);
+
 }
 
 h1 {
-  font-family: 'Fredoka One', cursive;
-  font-size: 2rem;
-  color: #1b5e20;
-  margin-bottom: 10px;
+
+  font-family:'Fredoka One';
+
+  font-size:2rem;
+
+  color:#1b5e20;
+
 }
 
 .stats-row {
-  display: flex;
-  justify-content: space-around;
-  margin-bottom: 18px;
+
+  display:flex;
+
+  justify-content:space-around;
+
+  margin:15px 0;
+
 }
 
 .stat-box {
-  background: rgba(255,255,255,0.5);
-  border-radius: 14px;
-  padding: 6px 18px;
-  font-size: 0.85rem;
-  font-weight: 900;
-  color: #2e7d32;
-}
 
-.stat-box span {
-  display: block;
-  font-size: 1.3rem;
-  color: #c62828;
+  background:rgba(255,255,255,0.5);
+
+  padding:8px 15px;
+
+  border-radius:12px;
+
+  font-weight:bold;
+
 }
 
 #appleBtn {
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  font-size: 100px;
-  border: none;
-  cursor: pointer;
-  background: radial-gradient(circle, #fff, #ffb3b3);
+
+  width:180px;
+
+  height:180px;
+
+  border-radius:50%;
+
+  font-size:90px;
+
+  border:none;
+
+  cursor:pointer;
+
+  background:radial-gradient(circle,#fff,#ffb3b3);
+
+  transition:0.1s;
+
+}
+
+#appleBtn:active {
+
+  transform:scale(0.9);
+
 }
 
 #counter {
-  font-size: 1.8rem;
-  margin-top: 18px;
+
+  font-size:1.6rem;
+
+  margin-top:15px;
+
 }
 
+/* CONFETTI */
+
+.confetti {
+
+  position:fixed;
+
+  font-size:20px;
+
+  animation:fall 1.5s linear forwards;
+
+}
+
+@keyframes fall {
+
+  0% { transform:translateY(-50px); opacity:1; }
+
+  100% { transform:translateY(110vh); opacity:0; }
+
+}
+
+/* PARTIKULES */
+
+.particle {
+
+  position:fixed;
+
+  animation:burst 0.7s ease-out forwards;
+
+}
+
+@keyframes burst {
+
+  0% { transform:scale(1); opacity:1; }
+
+  100% { transform:scale(0.2) translate(40px,-40px); opacity:0; }
+
+}
+
+/* LEADERBOARD */
+
 #leaderboardBox {
-  margin-top: 20px;
-  background: white;
-  padding: 15px;
-  border-radius: 20px;
+
+  display:none;
+
+  margin-top:20px;
+
+  background:#fff;
+
+  padding:15px;
+
+  border-radius:15px;
+
 }
 
 #leaderboard {
-  margin: 10px 0;
-  font-weight: bold;
-  text-align: left;
+
+  text-align:left;
+
+  margin:10px 0;
+
 }
 
 #pseudo {
-  padding: 10px;
-  width: 100%;
-  margin-bottom: 10px;
+
+  width:100%;
+
+  padding:10px;
+
+  margin:8px 0;
+
 }
 
-#leaderboardBox button {
-  padding: 10px;
-  width: 100%;
-  background: #43a047;
-  color: white;
-  border: none;
-  border-radius: 12px;
+button.send {
+
+  width:100%;
+
+  padding:10px;
+
+  background:#43a047;
+
+  color:#fff;
+
+  border:none;
+
+  border-radius:10px;
+
 }
+
 </style>
+
 </head>
 
 <body>
 
 <div class="overlay">
+
   <h1>🍎 Pomme</h1>
 
   <div class="stats-row">
-    <div class="stat-box">⏱ <span id="timerDisplay">30</span></div>
-    <div class="stat-box">🏆 <span id="bestScore">0</span></div>
+
+    <div class="stat-box">⏱ <span id="timer">30</span></div>
+
+    <div class="stat-box">🏆 <span id="best">0</span></div>
+
   </div>
 
   <button id="appleBtn">🍎</button>
 
   <div id="counter">Clics : 0</div>
 
+  <!-- LEADERBOARD -->
+
   <div id="leaderboardBox">
-    <h2>🏆 Classement</h2>
 
-    <div id="leaderboard">Chargement...</div>
+    <h3>🏆 Classement</h3>
 
-    <input type="text" id="pseudo" placeholder="Ton pseudo">
-    <button onclick="sendScore()">Envoyer score</button>
+    <div id="leaderboard"></div>
+
+    <input id="pseudo" placeholder="Ton pseudo">
+
+    <button class="send" onclick="sendScore()">Envoyer score</button>
+
   </div>
+
 </div>
 
 <script>
+
 let clicks = 0;
-let bestScore = localStorage.getItem("pomme_best") || 0;
-let timer = 30;
-let gameStarted = false;
+
+let time = 30;
+
+let started = false;
+
 let gameOver = false;
 
-document.getElementById("bestScore").innerText = bestScore;
+let best = localStorage.getItem("best") || 0;
+
+document.getElementById("best").innerText = best;
 
 const btn = document.getElementById("appleBtn");
+
 const counter = document.getElementById("counter");
 
-btn.addEventListener("click", () => {
+btn.onclick = (e) => {
+
   if (gameOver) return;
 
-  if (!gameStarted) {
-    gameStarted = true;
+  if (!started) {
+
+    started = true;
+
     startTimer();
+
   }
 
   clicks++;
+
   counter.innerText = "Clics : " + clicks;
-});
+
+  spawnParticles(e.clientX, e.clientY);
+
+  if (clicks % 10 === 0) launchConfetti();
+
+};
 
 function startTimer() {
-  let interval = setInterval(() => {
-    timer--;
-    document.getElementById("timerDisplay").innerText = timer;
 
-    if (timer <= 0) {
-      clearInterval(interval);
+  let t = setInterval(() => {
+
+    time--;
+
+    document.getElementById("timer").innerText = time;
+
+    if (time <= 0) {
+
+      clearInterval(t);
+
       endGame();
+
     }
+
   }, 1000);
+
 }
 
 function endGame() {
+
   gameOver = true;
 
   window.lastScore = clicks;
 
-  if (clicks > bestScore) {
-    bestScore = clicks;
-    localStorage.setItem("pomme_best", bestScore);
-    document.getElementById("bestScore").innerText = bestScore;
+  if (clicks > best) {
+
+    best = clicks;
+
+    localStorage.setItem("best", best);
+
+    document.getElementById("best").innerText = best;
+
   }
-}
 
-function sendScore() {
-  let pseudo = document.getElementById("pseudo").value;
-  if (pseudo === "") pseudo = "Joueur";
-
-  let scores = JSON.parse(localStorage.getItem("pomme_scores") || "[]");
-
-  scores.push({
-    name: pseudo,
-    score: window.lastScore || clicks
-  });
-
-  scores.sort((a, b) => b.score - a.score);
-  scores = scores.slice(0, 10);
-
-  localStorage.setItem("pomme_scores", JSON.stringify(scores));
+  document.getElementById("leaderboardBox").style.display = "block";
 
   loadScores();
+
+}
+
+/* SCORE SYSTEM */
+
+function sendScore() {
+
+  let name = document.getElementById("pseudo").value || "Joueur";
+
+  let scores = JSON.parse(localStorage.getItem("scores") || "[]");
+
+  scores.push({
+
+    name,
+
+    score: window.lastScore || clicks
+
+  });
+
+  scores.sort((a,b) => b.score - a.score);
+
+  scores = scores.slice(0,10);
+
+  localStorage.setItem("scores", JSON.stringify(scores));
+
+  loadScores();
+
 }
 
 function loadScores() {
-  let scores = JSON.parse(localStorage.getItem("pomme_scores") || "[]");
+
+  let scores = JSON.parse(localStorage.getItem("scores") || "[]");
 
   let html = "";
 
-  scores.forEach((s, i) => {
-    html += (i + 1) + ". " + s.name + " - " + s.score + "<br>";
+  scores.forEach((s,i) => {
+
+    html += `${i+1}. ${s.name} - ${s.score}<br>`;
+
   });
 
   document.getElementById("leaderboard").innerHTML =
+
     html || "Aucun score";
+
 }
+
+/* CONFETTI */
+
+function launchConfetti() {
+
+  for (let i=0;i<15;i++) {
+
+    let c = document.createElement("div");
+
+    c.className = "confetti";
+
+    c.innerText = ["🍎","🍏","✨","🎉"][Math.floor(Math.random()*4)];
+
+    c.style.left = Math.random()*100+"vw";
+
+    document.body.appendChild(c);
+
+    setTimeout(()=>c.remove(),1500);
+
+  }
+
+}
+
+/* PARTICULES */
+
+function spawnParticles(x,y) {
+
+  for (let i=0;i<5;i++) {
+
+    let p = document.createElement("div");
+
+    p.className = "particle";
+
+    p.innerText = "🍎";
+
+    p.style.left = x+"px";
+
+    p.style.top = y+"px";
+
+    document.body.appendChild(p);
+
+    setTimeout(()=>p.remove(),700);
+
+  }
+
+}
+
+/* BLOQUE ZOOM iPhone */
+
+document.addEventListener("gesturestart", e => e.preventDefault());
 
 loadScores();
 
-// Bloque zoom iPhone
-document.addEventListener("gesturestart", function(e) {
-  e.preventDefault();
-});
 </script>
 
 </body>
+
 </html>
