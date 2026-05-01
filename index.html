@@ -409,7 +409,7 @@ async function endGame() {
   document.getElementById('finalMsg').textContent =
     `${playerName}, tu as cliqué ${clicks} fois ! 🍎  Ton record : ${bestScore}`;
   showScreen(screenEnd);
-  await saveScore(playerName, clicks);
+  await saveScore(playerName, bestScore); // bestScore est déjà le max entre l'ancien et clicks
   await renderLeaderboard();
 }
 
@@ -455,78 +455,83 @@ btn.addEventListener("click", (e) => {
 });
 
 // ── Supabase : sauvegarder le score ───────────────────────────
-// ✅ CORRECTION : on vérifie que db n'est pas null avant d'appeler Supabase
 async function saveScore(name, score) {
   if (!db) return;
-  try {
-    // ✅ maybeSingle() retourne null (pas d'erreur) si aucune ligne trouvée
-    const { data: existing, error: selectError } = await db
-      .from('scores')
-      .select('id, score')
-      .eq('name', name)
-      .maybeSingle();
-
-    if (selectError) {
-      console.warn('Erreur saveScore (select):', selectError.message || JSON.stringify(selectError));
-      return;
-    }
-
-    if (existing) {
-      if (score > existing.score) {
-        const { error: updateError } = await db.from('scores').update({ score }).eq('id', existing.id);
-        if (updateError) console.warn('Erreur saveScore (update):', updateError.message);
-      }
-    } else {
-      const { error: insertError } = await db.from('scores').insert([{ name, score }]);
-      if (insertError) console.warn('Erreur saveScore (insert):', insertError.message);
-    }
-  } catch (e) {
-    console.warn('Erreur saveScore (exception):', e.message || e);
-  }
-}
-
-// ── Supabase : afficher le classement ─────────────────────────
-// ✅ CORRECTION : on vérifie que db n'est pas null avant d'appeler Supabase
-
-async function renderLeaderboard() {
-  const panel = document.getElementById('leaderboard-panel');
-
-  if (!db) {
-    panel.innerHTML = '<div class="lb-empty">Classement indisponible 😕</div>';
-    return;
-  }
-
-  panel.innerHTML = '<div class="lb-loading">Chargement... 🍎</div>';
 
   try {
     const { data, error } = await db
       .from('scores')
       .select('*')
-      .order('score', { ascending: false })
-      .limit(20);
+      .eq('name', name);
 
     if (error) {
-      console.log("ERREUR SUPABASE :", error);
-      panel.innerHTML = '<div class="lb-empty">Erreur classement 😕</div>';
+      console.log(error);
       return;
     }
 
     if (!data || data.length === 0) {
-      panel.innerHTML = '<div class="lb-empty">Aucun score 🍎</div>';
+      await db.from('scores').insert([{ name, score }]);
       return;
     }
 
-    panel.innerHTML = data.map((e, i) => `
-      <div class="lb-row">
-        <span class="lb-rank">#${i + 1}</span>
-        <span class="lb-name">${escHtml(e.name)}</span>
-        <span class="lb-score">${e.score} 🍎</span>
-      </div>
-    `).join('');
+    const bestOld = Math.max(...data.map(e => e.score));
+
+    if (score > bestOld) {
+      await db
+        .from('scores')
+        .update({ score })
+        .eq('name', name);
+    }
 
   } catch (err) {
-    console.log("ERREUR JS :", err);
-    panel.innerHTML = '<div class="lb-empty">Erreur réseau 😕</div>';
+    console.log(err);
+  }
+}
+
+// ── Supabase : afficher le classement ─────────────────────────
+// ✅ CORRECTION : on vérifie que db n'est pas null avant d'appeler Supabase
+async function renderLeaderboard() {
+  const panel = document.getElementById('leaderboard-panel');
+
+  if (!db) {
+    panel.innerHTML = '<div class="lb-empty">Classement indisponible (hors-ligne) 😕</div>';
+    return;
+  }
+
+  panel.innerHTML = '<div class="lb-loading">Chargement... 🍎</div>';
+  try {
+    const { data, error } = await db
+      .from('scores')
+      .select('name, score')
+      .order('score', { ascending: false })
+      .limit(20);
+
+    // ✅ On gère l'erreur inline (plus de throw) pour éviter [object Object]
+    if (error) {
+      console.warn('Erreur leaderboard:', error.message || JSON.stringify(error));
+      panel.innerHTML = '<div class="lb-empty">Erreur de connexion 😕</div>';
+      return;
+    }
+    if (!data || !data.length) {
+      panel.innerHTML = '<div class="lb-empty">Aucun score encore. Sois le premier ! 🍎</div>';
+      return;
+    }
+
+    const medals  = ['🥇','🥈','🥉'];
+    const classes = ['gold','silver','bronze'];
+    panel.innerHTML = data.map((e, i) => {
+      const isMe = e.name === playerName;
+      const cls  = (i < 3 ? classes[i] : '') + (isMe ? ' me' : '');
+      const rank = i < 3 ? medals[i] : `#${i+1}`;
+      return `<div class="lb-row ${cls}">
+        <span class="lb-rank">${rank}</span>
+        <span class="lb-name">${escHtml(e.name)}</span>
+        <span class="lb-score">${e.score} 🍎</span>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    panel.innerHTML = '<div class="lb-empty">Erreur de connexion 😕</div>';
+    console.warn('Erreur leaderboard (exception):', e.message || e);
   }
 }
 
