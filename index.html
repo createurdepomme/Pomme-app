@@ -1,60 +1,72 @@
-<!-- HTML -->
-<div class="game">
-  <h1>🍎 Pomme</h1>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍎Pomme</title>
 
-  <div class="topbar">
-    <div>⏱ Temps : <span id="timer">30</span></div>
-    <div>🔥 Combo : <span id="combo">0</span></div>
-    <div>🏆 Score : <span id="score">0</span></div>
-  </div>
-
-  <button id="appleBtn">🍎</button>
-
-
-  <div id="achievements"></div>
-</div>
-/* CSS */
+<style>
 body{
   margin:0;
   min-height:100vh;
   display:flex;
   justify-content:center;
   align-items:center;
-  font-family:Arial;
-  background:#c8f7c5;
+  font-family:Arial,sans-serif;
+  background:linear-gradient(135deg,#b8f5b1,#e8ffd8);
   overflow:hidden;
 }
 
 .game{
-  background:white;
+  width:360px;
+  background:rgba(255,255,255,0.9);
   padding:30px;
   border-radius:30px;
   text-align:center;
-  width:350px;
   box-shadow:0 10px 30px rgba(0,0,0,0.2);
+  backdrop-filter:blur(10px);
 }
 
 h1{
   margin-top:0;
   color:#2e7d32;
+  font-size:40px;
 }
 
 .topbar{
   display:flex;
   justify-content:space-between;
+  gap:10px;
   margin-bottom:20px;
+}
+
+.stat{
+  flex:1;
+  background:#f4fff1;
+  padding:10px;
+  border-radius:16px;
   font-weight:bold;
+  color:#2e7d32;
+}
+
+.stat span{
+  display:block;
+  font-size:22px;
+  margin-top:5px;
 }
 
 #appleBtn{
-  width:180px;
-  height:180px;
+  width:200px;
+  height:200px;
   border:none;
   border-radius:50%;
-  font-size:90px;
-  cursor:pointer;
   background:white;
-  box-shadow:0 8px 20px rgba(0,0,0,0.2);
+  font-size:100px;
+  cursor:pointer;
+  box-shadow:
+    0 10px 20px rgba(0,0,0,0.2),
+    inset 0 -8px 10px rgba(0,0,0,0.08);
+
   transition:0.1s;
 }
 
@@ -68,28 +80,41 @@ h1{
 
 #message{
   margin-top:20px;
-  font-size:20px;
+  min-height:30px;
+  font-size:22px;
   font-weight:bold;
   color:#2e7d32;
-  min-height:30px;
+}
+
+#achievements{
+  margin-top:20px;
+  text-align:left;
+}
+
+.achievement{
+  background:#fff8c4;
+  padding:10px;
+  border-radius:12px;
+  margin-bottom:8px;
+  font-weight:bold;
 }
 
 .popup{
   position:fixed;
-  font-size:30px;
+  font-size:32px;
   font-weight:bold;
-  animation:pop 1s forwards;
   pointer-events:none;
+  animation:popup 1s forwards;
 }
 
-@keyframes pop{
+@keyframes popup{
   0%{
-    transform:translateY(0);
+    transform:translateY(0) scale(0.5);
     opacity:1;
   }
 
   100%{
-    transform:translateY(-100px);
+    transform:translateY(-120px) scale(1.2);
     opacity:0;
   }
 }
@@ -97,41 +122,105 @@ h1{
 .confetti{
   position:fixed;
   font-size:30px;
-  animation:fall 3s linear forwards;
+  pointer-events:none;
+  animation:fall linear forwards;
 }
 
 @keyframes fall{
   from{
-    transform:translateY(-100px);
+    transform:translateY(-100px) rotate(0deg);
+    opacity:1;
   }
 
   to{
-    transform:translateY(120vh);
+    transform:translateY(120vh) rotate(720deg);
+    opacity:0;
   }
 }
 
-#achievements{
+#gameOver{
   margin-top:20px;
-  text-align:left;
-  font-size:14px;
+  font-size:28px;
+  color:#c62828;
+  font-weight:bold;
 }
-// JS
+
+#restartBtn{
+  margin-top:20px;
+  padding:12px 25px;
+  border:none;
+  border-radius:30px;
+  background:#43a047;
+  color:white;
+  font-size:18px;
+  cursor:pointer;
+  display:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="game">
+
+  <h1>🍎 Pomme PRO</h1>
+
+  <div class="topbar">
+
+    <div class="stat">
+      ⏱ Temps
+      <span id="timer">30</span>
+    </div>
+
+    <div class="stat">
+      🏆 Score
+      <span id="score">0</span>
+    </div>
+
+    <div class="stat">
+      🔥 Combo
+      <span id="combo">0</span>
+    </div>
+
+  </div>
+
+  <button id="appleBtn">🍎</button>
+
+  <div id="message">
+    Clique sur la pomme 🍎
+  </div>
+
+  <div id="gameOver"></div>
+
+  <button id="restartBtn">
+    Rejouer
+  </button>
+
+  <div id="achievements"></div>
+
+</div>
+
+<script>
 
 let score = 0;
 let combo = 0;
 let timer = 30;
+
 let gameStarted = false;
 let gameOver = false;
+
 let comboTimeout;
 
-const btn = document.getElementById("appleBtn");
+const achievements = [];
+
+const appleBtn = document.getElementById("appleBtn");
 const scoreEl = document.getElementById("score");
 const comboEl = document.getElementById("combo");
 const timerEl = document.getElementById("timer");
 const messageEl = document.getElementById("message");
 const achievementsEl = document.getElementById("achievements");
-
-const achievements = [];
+const gameOverEl = document.getElementById("gameOver");
+const restartBtn = document.getElementById("restartBtn");
 
 function startTimer(){
 
@@ -141,13 +230,19 @@ function startTimer(){
 
     timerEl.textContent = timer;
 
+    if(timer <= 5){
+      timerEl.style.color = "#c62828";
+    }
+
     if(timer <= 0){
 
       clearInterval(interval);
 
       gameOver = true;
 
-      messageEl.textContent = "⏰ Partie terminée !";
+      gameOverEl.textContent = "⏰ Partie terminée !";
+
+      restartBtn.style.display = "inline-block";
     }
 
   },1000);
@@ -173,9 +268,16 @@ function popup(x,y,text){
 
 function confetti(){
 
-  const emojis = ["🎉","✨","🍎","🍏","🏆"];
+  const emojis = [
+    "🎉",
+    "✨",
+    "🍎",
+    "🍏",
+    "🏆",
+    "⭐"
+  ];
 
-  for(let i=0;i<20;i++){
+  for(let i=0;i<25;i++){
 
     const c = document.createElement("div");
 
@@ -184,7 +286,8 @@ function confetti(){
     c.textContent =
       emojis[Math.floor(Math.random()*emojis.length)];
 
-    c.style.left = Math.random()*100 + "vw";
+    c.style.left =
+      Math.random()*100 + "vw";
 
     c.style.animationDuration =
       (2 + Math.random()*2) + "s";
@@ -197,13 +300,15 @@ function confetti(){
   }
 }
 
-function unlock(text){
+function unlockAchievement(text){
 
   if(achievements.includes(text)) return;
 
   achievements.push(text);
 
   const div = document.createElement("div");
+
+  div.className = "achievement";
 
   div.textContent = "🏆 " + text;
 
@@ -212,7 +317,36 @@ function unlock(text){
   confetti();
 }
 
-btn.addEventListener("click",(e)=>{
+function resetGame(){
+
+  score = 0;
+  combo = 0;
+  timer = 30;
+
+  gameStarted = false;
+  gameOver = false;
+
+  scoreEl.textContent = 0;
+  comboEl.textContent = 0;
+  timerEl.textContent = 30;
+
+  timerEl.style.color = "#2e7d32";
+
+  messageEl.textContent =
+    "Clique sur la pomme 🍎";
+
+  gameOverEl.textContent = "";
+
+  restartBtn.style.display = "none";
+
+  achievementsEl.innerHTML = "";
+
+  achievements.length = 0;
+}
+
+restartBtn.addEventListener("click", resetGame);
+
+appleBtn.addEventListener("click",(e)=>{
 
   if(gameOver) return;
 
@@ -232,13 +366,14 @@ btn.addEventListener("click",(e)=>{
 
     gain = 10;
 
-    messageEl.textContent = "🍏 POMME RARE +10";
-
     timer += 2;
 
     timerEl.textContent = timer;
 
-    btn.textContent = "🍏";
+    messageEl.textContent =
+      "🍏 POMME RARE +10";
+
+    appleBtn.textContent = "🍏";
   }
 
   // 💎 jackpot
@@ -246,67 +381,88 @@ btn.addEventListener("click",(e)=>{
 
     gain = 25;
 
-    messageEl.textContent = "💎 JACKPOT +25";
-
     timer += 5;
 
     timerEl.textContent = timer;
 
-    btn.textContent = "💎";
+    messageEl.textContent =
+      "💎 JACKPOT +25";
+
+    appleBtn.textContent = "💎";
   }
 
-  // ⚡ combo
+  // 🔥 combo
   combo++;
+
+  comboEl.textContent = combo;
 
   clearTimeout(comboTimeout);
 
   comboTimeout = setTimeout(()=>{
+
     combo = 0;
+
     comboEl.textContent = combo;
+
   },1200);
 
   if(combo >= 10){
 
     gain *= 5;
 
-    messageEl.textContent = "🔥 COMBO x5";
+    messageEl.textContent =
+      "🔥 COMBO x5";
   }
 
   else if(combo >= 5){
 
     gain *= 2;
 
-    messageEl.textContent = "⚡ COMBO x2";
+    messageEl.textContent =
+      "⚡ COMBO x2";
   }
 
   score += gain;
 
   scoreEl.textContent = score;
 
-  comboEl.textContent = combo;
-
   popup(e.clientX,e.clientY,"+" + gain);
 
   // 🏆 succès
+
   if(score >= 50){
-    unlock("50 points !");
+    unlockAchievement("50 points !");
   }
 
   if(score >= 100){
-    unlock("100 points !");
+    unlockAchievement("100 points !");
+  }
+
+  if(score >= 250){
+    unlockAchievement("250 points !");
   }
 
   if(combo >= 10){
-    unlock("Combo x10 !");
+    unlockAchievement("Combo x10 !");
+  }
+
+  if(combo >= 20){
+    unlockAchievement("Combo x20 !");
   }
 
   // 🎉 bonus
+
   if(score % 50 === 0){
     confetti();
   }
 
   setTimeout(()=>{
-    btn.textContent = "🍎";
+    appleBtn.textContent = "🍎";
   },300);
 
 });
+
+</script>
+
+</body>
+</html>
