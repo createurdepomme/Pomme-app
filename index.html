@@ -1,585 +1,312 @@
-<!DOCTYPE html>
-
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Pomme</title>
-<link rel="icon" href="icon.png">
-<link rel="apple-touch-icon" href="icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Pomme">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
-
-<style>
-html, body { touch-action: manipulation; }
-button { touch-action: manipulation; }
-* { margin:0; padding:0; box-sizing:border-box; }
-
-body {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-family: 'Nunito', sans-serif;
-  background-image: url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854');
-  background-size: cover;
-  background-position: center;
-  overflow: hidden;
-}
-
-.card {
-  background: rgba(255,255,255,0.25);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1.5px solid rgba(255,255,255,0.5);
-  border-radius: 32px;
-  text-align: center;
-  box-shadow: 0 16px 40px rgba(0,0,0,0.22);
-  position: absolute;
-  width: 360px;
-  padding: 32px 28px 28px;
-  transition: opacity 0.35s, transform 0.35s;
-}
-.card.hidden { opacity:0; pointer-events:none; transform:scale(0.95); }
-
-h1 {
-  font-family: 'Fredoka One', cursive;
-  font-size: 2.2rem;
-  color: #1b5e20;
-  text-shadow: 1px 2px 0 rgba(255,255,255,0.6);
-  margin-bottom: 6px;
-}
-h2 {
-  font-family: 'Fredoka One', cursive;
-  font-size: 1.6rem;
-  color: #1b5e20;
-  text-shadow: 1px 2px 0 rgba(255,255,255,0.5);
-  margin-bottom: 10px;
-}
-
-.btn-green, .btn-red {
-  padding: 10px 26px;
-  font-family: 'Fredoka One', cursive;
-  font-size: 1rem;
-  color: white;
-  border: none;
-  border-radius: 50px;
-  cursor: pointer;
-  transition: transform 0.1s;
-}
-.btn-red   { background: linear-gradient(135deg,#e53935,#b71c1c); box-shadow: 0 4px 0 #7f0000; }
-.btn-green { background: linear-gradient(135deg,#43a047,#1b5e20); box-shadow: 0 4px 0 #0a3d0a; }
-.btn-red:hover,   .btn-green:hover  { transform: translateY(-2px); }
-.btn-red:active   { transform: translateY(1px); box-shadow: 0 2px 0 #7f0000; }
-.btn-green:active { transform: translateY(1px); box-shadow: 0 2px 0 #0a3d0a; }
-
-/* ── Écran 1 ── */
-#screen-name p {
-  font-size: 1rem; font-weight: 700;
-  color: #2e7d32; margin-bottom: 18px;
-}
-#nameInput {
-  padding: 10px 18px;
-  font-family: 'Fredoka One', cursive;
-  font-size: 1.2rem;
-  border-radius: 50px;
-  border: 2px solid rgba(255,255,255,0.8);
-  background: rgba(255,255,255,0.85);
-  color: #1b5e20;
-  text-align: center;
-  outline: none;
-  width: 220px;
-  margin-bottom: 18px;
-  display: block;
-  margin-left: auto; margin-right: auto;
-}
-
-/* ── Écran 2 ── */
-.stats-row { display:flex; justify-content:space-around; margin-bottom:14px; }
-.stat-box {
-  background: rgba(255,255,255,0.5);
-  border-radius: 14px;
-  padding: 6px 18px;
-  font-size: 0.85rem; font-weight: 900; color: #2e7d32;
-}
-.stat-box span {
-  font-family: 'Fredoka One', cursive;
-  font-size: 1.3rem; display: block; color: #c62828;
-}
-
-#appleBtn {
-  width: 200px; height: 200px;
-  border: none; border-radius: 50%; font-size: 100px;
-  cursor: pointer;
-  background: radial-gradient(circle at 35% 35%, #fff 0%, #ffe0e0 60%, #ffb3b3 100%);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.22), inset 0 -4px 10px rgba(0,0,0,0.08);
-  transition: transform 0.12s, box-shadow 0.12s;
-  animation: floatBtn 3s ease-in-out infinite;
-  outline: none;
-}
-#appleBtn:hover  { transform: scale(1.07); }
-#appleBtn:active { transform: scale(0.9); }
-@keyframes floatBtn {
-  0%,100% { transform: translateY(0); }
-  50%     { transform: translateY(-10px); }
-}
-
-#counter {
-  font-family: 'Fredoka One', cursive;
-  font-size: 1.8rem; color: #1b5e20; margin-top: 14px;
-}
-#message {
-  margin-top: 8px; font-size: 1.05rem;
-  font-weight: 900; color: #2e7d32; min-height: 26px;
-}
-#niveau { margin-top: 6px; font-size: 0.85rem; font-weight: 700; color: #555; }
-
-.progress-wrap {
-  margin-top: 10px; background: rgba(0,0,0,0.1);
-  border-radius: 20px; height: 10px; overflow: hidden;
-}
-#progressBar {
-  height: 100%; width: 0%;
-  background: linear-gradient(90deg,#66bb6a,#e53935);
-  border-radius: 20px; transition: width 0.2s ease;
-}
-#resetBtn { margin-top: 14px; }
-
-/* ── Écran 3 ── */
-#screen-end { padding: 24px 20px 20px; }
-#finalMsg {
-  font-size: 1rem; font-weight: 900;
-  color: #1b5e20; margin-bottom: 14px;
-}
-
-#leaderboard-panel {
-  width: 100%; max-height: 260px;
-  overflow-y: auto; margin-bottom: 14px;
-}
-#leaderboard-panel::-webkit-scrollbar { width: 5px; }
-#leaderboard-panel::-webkit-scrollbar-thumb { background: rgba(0,100,0,0.25); border-radius: 10px; }
-
-.lb-row {
-  display: flex; align-items: center; gap: 8px;
-  padding: 7px 12px; border-radius: 14px; margin-bottom: 5px;
-  background: rgba(255,255,255,0.35);
-  font-weight: 900; color: #1b5e20; font-size: 0.9rem;
-}
-.lb-row.gold   { background: rgba(255,215,0,0.4); }
-.lb-row.silver { background: rgba(192,192,192,0.4); }
-.lb-row.bronze { background: rgba(205,127,50,0.35); }
-.lb-row.me     { background: rgba(100,220,100,0.4); outline: 2px solid #43a047; }
-
-.lb-rank  { font-family:'Fredoka One',cursive; font-size:1.1rem; width:26px; text-align:center; }
-.lb-name  { flex:1; }
-.lb-score { font-family:'Fredoka One',cursive; font-size:1rem; color:#c62828; }
-
-.lb-empty, .lb-loading {
-  text-align: center; color: #555;
-  font-size: 0.9rem; padding: 16px 0;
-}
-.lb-loading { animation: pulse 1s ease-in-out infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-.btn-row { display:flex; gap:10px; justify-content:center; }
-
-/* ── Animations ── */
-.flash { animation: flashAnim 0.55s ease; }
-@keyframes flashAnim {
-  0%   { transform: scale(1) rotate(0deg); }
-  25%  { transform: scale(1.28) rotate(8deg); }
-  60%  { transform: scale(0.93) rotate(-6deg); }
-  100% { transform: scale(1) rotate(0deg); }
-}
-.shake { animation: shakeAnim 0.4s ease; }
-@keyframes shakeAnim {
-  0%,100%{transform:translateX(0)}
-  20%{transform:translateX(-8px)}
-  40%{transform:translateX(8px)}
-  60%{transform:translateX(-5px)}
-  80%{transform:translateX(5px)}
-}
-
-.confetti {
-  position:fixed; animation:fall linear forwards;
-  pointer-events:none; z-index:999;
-}
-@keyframes fall {
-  0%  { transform:translateY(-60px) rotate(0deg); opacity:1; }
-  100%{ transform:translateY(110vh) rotate(540deg); opacity:0; }
-}
-.particle {
-  position:fixed; pointer-events:none;
-  font-size:1.6rem; animation:burst 0.8s ease-out forwards; z-index:998;
-}
-@keyframes burst {
-  0%  { transform:translate(0,0) scale(1.2); opacity:1; }
-  100%{ transform:translate(var(--dx),var(--dy)) scale(0.2); opacity:0; }
-}
-.score-popup {
-  position:fixed; font-family:'Fredoka One',cursive; font-size:1.6rem;
-  color:#fff; text-shadow:1px 1px 0 #c62828,-1px -1px 0 #c62828;
-  pointer-events:none; animation:popUp 0.9s ease-out forwards; z-index:997;
-}
-@keyframes popUp {
-  0%  { transform:translateY(0) scale(0.5); opacity:1; }
-  60% { transform:translateY(-50px) scale(1.3); opacity:1; }
-  100%{ transform:translateY(-90px) scale(1); opacity:0; }
-}
-</style>
-
-</head>
-<body>
-
-<!-- ════ ÉCRAN 1 : PSEUDO ════ -->
-
-<div class="card" id="screen-name">
+<!-- HTML -->
+<div class="game">
   <h1>🍎 Pomme</h1>
-  <p>Entre ton pseudo pour jouer !</p>
-  <input type="text" id="nameInput" maxlength="16" placeholder="Ton pseudo..." autocomplete="off" />
-  <button class="btn-green" id="nameConfirmBtn">🍎 Jouer !</button>
-</div>
 
-<!-- ════ ÉCRAN 2 : JEU ════ -->
-
-<div class="card hidden" id="screen-game">
-  <h1>Pomme</h1>
-  <div class="stats-row">
-    <div class="stat-box">⏱ Temps<span id="timerDisplay">30</span></div>
-    <div class="stat-box">🏆 Record<span id="bestScore">0</span></div>
+  <div class="topbar">
+    <div>⏱ Temps : <span id="timer">30</span></div>
+    <div>🔥 Combo : <span id="combo">0</span></div>
+    <div>🏆 Score : <span id="score">0</span></div>
   </div>
+
   <button id="appleBtn">🍎</button>
-  <div id="counter">Clics : 0</div>
-  <div id="message">Appuie pour commencer !</div>
-  <div id="niveau">Niveau 1 🌱</div>
-  <div class="progress-wrap"><div id="progressBar"></div></div>
-  <button class="btn-red" id="resetBtn">🔄 Recommencer</button>
+
+
+  <div id="achievements"></div>
 </div>
-
-<!-- ════ ÉCRAN 3 : FIN + CLASSEMENT ════ -->
-
-<div class="card hidden" id="screen-end">
-  <h2>⏰ Temps écoulé !</h2>
-  <div id="finalMsg"></div>
-  <div id="leaderboard-panel">
-    <div class="lb-loading">Chargement... 🍎</div>
-  </div>
-  <div class="btn-row">
-    <button class="btn-green" id="replayBtn">🔄 Rejouer</button>
-    <button class="btn-red"   id="changeNameBtn">👤 Changer</button>
-  </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script>
-document.addEventListener("gesturestart", e => e.preventDefault());
-
-// ── Supabase (initialisation protégée) ────────────────────────
-const SUPABASE_URL = "https://qaofelxfekofzkuhsvir.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFhb2ZlbHhmZWtvZnprdWhzdmlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mzg3NjAsImV4cCI6MjA5MzExNDc2MH0.eQI91OCDJVRz-dFr6omZlAlhQtZ06xMslArTduZJRC8";
-
-// ✅ CORRECTION : on entoure l'init Supabase dans un try/catch.
-// Si le script CDN n'a pas chargé (réseau lent, bloqué…), db reste
-// null et le jeu fonctionne quand même sans classement.
-let db = null;
-try {
-  db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-} catch (e) {
-  console.warn('Supabase non disponible – classement désactivé.', e);
+/* CSS */
+body{
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-family:Arial;
+  background:#c8f7c5;
+  overflow:hidden;
 }
 
-// ── État ───────────────────────────────────────────────────────
-let clicks        = 0;
-let bestScore     = parseInt(localStorage.getItem('pomme_best') || '0');
-let timerLeft     = 30;
-let timerInterval = null;
-let gameStarted   = false;
-let gameOver      = false;
-let playerName    = '';
-
-const messages = [
-  "Miam ! 😋","Croquant ! 🎵","Délicieux ! 🌟","Encore ! ✨",
-  "Super ! 🍀","Oh là là ! 😍","Pomme d'or ! 🏆","Incroyable ! 🎊",
-  "Tu es inarrêtable ! 💪","Génie ! 🧠","Trop fort ! 🔥","Waouw ! 🤩"
-];
-
-// ── DOM ────────────────────────────────────────────────────────
-const screenName  = document.getElementById('screen-name');
-const screenGame  = document.getElementById('screen-game');
-const screenEnd   = document.getElementById('screen-end');
-const btn         = document.getElementById('appleBtn');
-const counter     = document.getElementById('counter');
-const messageEl   = document.getElementById('message');
-const niveauEl    = document.getElementById('niveau');
-const progressBar = document.getElementById('progressBar');
-const timerDisp   = document.getElementById('timerDisplay');
-const bestScoreEl = document.getElementById('bestScore');
-const gameCard    = document.getElementById('screen-game');
-
-bestScoreEl.textContent = bestScore;
-
-// ── Navigation ─────────────────────────────────────────────────
-function showScreen(screen) {
-  [screenName, screenGame, screenEnd].forEach(s => s.classList.add('hidden'));
-  screen.classList.remove('hidden');
+.game{
+  background:white;
+  padding:30px;
+  border-radius:30px;
+  text-align:center;
+  width:350px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.2);
 }
 
-// ── Écran 1 : Pseudo ──────────────────────────────────────────
-document.getElementById('nameConfirmBtn').addEventListener('click', confirmName);
-document.getElementById('nameInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') confirmName();
-});
-
-function confirmName() {
-  const val = document.getElementById('nameInput').value.trim();
-  if (!val) { document.getElementById('nameInput').focus(); return; }
-  playerName = val;
-  localStorage.setItem('pomme_name', playerName);
-  startFreshGame();
+h1{
+  margin-top:0;
+  color:#2e7d32;
 }
 
-// ── Écran 2 : Jeu ─────────────────────────────────────────────
-function startFreshGame() {
-  clicks = 0; timerLeft = 30; gameStarted = false; gameOver = false;
-  clearInterval(timerInterval);
-  counter.textContent     = "Clics : 0";
-  messageEl.textContent   = "Appuie pour commencer !";
-  niveauEl.textContent    = "Niveau 1 🌱";
-  timerDisp.textContent   = "30";
-  timerDisp.parentElement.style.color = '#2e7d32';
-  progressBar.style.width = "0%";
-  btn.textContent         = "🍎";
-  bestScoreEl.textContent = bestScore;
-  showScreen(screenGame);
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:20px;
+  font-weight:bold;
 }
 
-document.getElementById('resetBtn').addEventListener('click', startFreshGame);
-document.getElementById('replayBtn').addEventListener('click', startFreshGame);
-document.getElementById('changeNameBtn').addEventListener('click', () => {
-  document.getElementById('nameInput').value = '';
-  showScreen(screenName);
-});
-
-// ── Audio ──────────────────────────────────────────────────────
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-function playClick() {
-  const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-  osc.connect(gain); gain.connect(audioCtx.destination);
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(520, audioCtx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.08);
-  gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
-  osc.start(); osc.stop(audioCtx.currentTime + 0.12);
+#appleBtn{
+  width:180px;
+  height:180px;
+  border:none;
+  border-radius:50%;
+  font-size:90px;
+  cursor:pointer;
+  background:white;
+  box-shadow:0 8px 20px rgba(0,0,0,0.2);
+  transition:0.1s;
 }
 
-function playBonus() {
-  [0, 0.12, 0.24].forEach((delay, i) => {
-    const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime([523,659,784][i], audioCtx.currentTime + delay);
-    gain.gain.setValueAtTime(0.3, audioCtx.currentTime + delay);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + 0.2);
-    osc.start(audioCtx.currentTime + delay);
-    osc.stop(audioCtx.currentTime + delay + 0.22);
-  });
+#appleBtn:hover{
+  transform:scale(1.05);
 }
 
-// ── Timer ──────────────────────────────────────────────────────
-function startTimer() {
-  timerInterval = setInterval(() => {
-    timerLeft--;
-    timerDisp.textContent = timerLeft;
-    if (timerLeft <= 5) timerDisp.parentElement.style.color = '#c62828';
-    if (timerLeft <= 0) endGame();
-  }, 1000);
+#appleBtn:active{
+  transform:scale(0.9);
 }
 
-async function endGame() {
-  clearInterval(timerInterval);
-  gameOver = true;
-  if (clicks > bestScore) {
-    bestScore = clicks;
-    localStorage.setItem('pomme_best', bestScore);
-  }
-  document.getElementById('finalMsg').textContent =
-    `${playerName}, tu as cliqué ${clicks} fois ! 🍎  Ton record : ${bestScore}`;
-  showScreen(screenEnd);
-  await saveScore(playerName, bestScore); // bestScore est déjà le max entre l'ancien et clicks
-  await renderLeaderboard();
+#message{
+  margin-top:20px;
+  font-size:20px;
+  font-weight:bold;
+  color:#2e7d32;
+  min-height:30px;
 }
 
-// ── Niveau ─────────────────────────────────────────────────────
-function getNiveau(n) {
-  if (n < 20)  return { label:"Niveau 1 🌱", next:20 };
-  if (n < 50)  return { label:"Niveau 2 🍀", next:50 };
-  if (n < 100) return { label:"Niveau 3 🔥", next:100 };
-  if (n < 200) return { label:"Niveau 4 ⚡", next:200 };
-  return { label:"Niveau MAX 👑", next:null };
+.popup{
+  position:fixed;
+  font-size:30px;
+  font-weight:bold;
+  animation:pop 1s forwards;
+  pointer-events:none;
 }
 
-// ── Clic principal ─────────────────────────────────────────────
-btn.addEventListener("click", (e) => {
-  if (gameOver) return;
-  if (!gameStarted) { gameStarted = true; startTimer(); }
-  audioCtx.resume();
-  clicks++;
-  playClick();
-  counter.textContent   = "Clics : " + clicks;
-  messageEl.textContent = messages[Math.floor(Math.random() * messages.length)];
-
-  const niv = getNiveau(clicks);
-  niveauEl.textContent = niv.label;
-  if (niv.next) {
-    const prev = clicks < 20 ? 0 : clicks < 50 ? 20 : clicks < 100 ? 50 : 100;
-    progressBar.style.width = ((clicks - prev) / (niv.next - prev) * 100) + '%';
-  } else {
-    progressBar.style.width = '100%';
+@keyframes pop{
+  0%{
+    transform:translateY(0);
+    opacity:1;
   }
 
-  spawnParticles(e.clientX, e.clientY);
-  showPopup(e.clientX, e.clientY, "+1");
-
-  if (clicks % 10 === 0) {
-    playBonus();
-    btn.textContent = btn.textContent === "🍎" ? "🍏" : "🍎";
-    btn.classList.remove("flash"); void btn.offsetWidth; btn.classList.add("flash");
-    gameCard.classList.remove("shake"); void gameCard.offsetWidth; gameCard.classList.add("shake");
-    launchConfetti();
-    showPopup(e.clientX, e.clientY - 30, "BONUS ! 🎉");
+  100%{
+    transform:translateY(-100px);
+    opacity:0;
   }
-});
+}
 
-// ── Supabase : sauvegarder le score ───────────────────────────
-async function saveScore(name, score) {
-  if (!db) return;
+.confetti{
+  position:fixed;
+  font-size:30px;
+  animation:fall 3s linear forwards;
+}
 
-  try {
-    const { data, error } = await db
-      .from('scores')
-      .select('*')
-      .eq('name', name);
+@keyframes fall{
+  from{
+    transform:translateY(-100px);
+  }
 
-    if (error) {
-      console.log(error);
-      return;
+  to{
+    transform:translateY(120vh);
+  }
+}
+
+#achievements{
+  margin-top:20px;
+  text-align:left;
+  font-size:14px;
+}
+// JS
+
+let score = 0;
+let combo = 0;
+let timer = 30;
+let gameStarted = false;
+let gameOver = false;
+let comboTimeout;
+
+const btn = document.getElementById("appleBtn");
+const scoreEl = document.getElementById("score");
+const comboEl = document.getElementById("combo");
+const timerEl = document.getElementById("timer");
+const messageEl = document.getElementById("message");
+const achievementsEl = document.getElementById("achievements");
+
+const achievements = [];
+
+function startTimer(){
+
+  const interval = setInterval(()=>{
+
+    timer--;
+
+    timerEl.textContent = timer;
+
+    if(timer <= 0){
+
+      clearInterval(interval);
+
+      gameOver = true;
+
+      messageEl.textContent = "⏰ Partie terminée !";
     }
 
-    if (!data || data.length === 0) {
-      await db.from('scores').insert([{ name, score }]);
-      return;
-    }
-
-    const bestOld = Math.max(...data.map(e => e.score));
-
-    if (score > bestOld) {
-      await db
-        .from('scores')
-        .update({ score })
-        .eq('name', name);
-    }
-
-  } catch (err) {
-    console.log(err);
-  }
+  },1000);
 }
 
-// ── Supabase : afficher le classement ─────────────────────────
-// ✅ CORRECTION : on vérifie que db n'est pas null avant d'appeler Supabase
-async function renderLeaderboard() {
-  const panel = document.getElementById('leaderboard-panel');
+function popup(x,y,text){
 
-  if (!db) {
-    panel.innerHTML = '<div class="lb-empty">Classement indisponible (hors-ligne) 😕</div>';
-    return;
-  }
-
-  panel.innerHTML = '<div class="lb-loading">Chargement... 🍎</div>';
-  try {
-    const { data, error } = await db
-      .from('scores')
-      .select('name, score')
-      .order('score', { ascending: false })
-      .limit(20);
-
-    // ✅ On gère l'erreur inline (plus de throw) pour éviter [object Object]
-    if (error) {
-      console.warn('Erreur leaderboard:', error.message || JSON.stringify(error));
-      panel.innerHTML = '<div class="lb-empty">Erreur de connexion 😕</div>';
-      return;
-    }
-    if (!data || !data.length) {
-      panel.innerHTML = '<div class="lb-empty">Aucun score encore. Sois le premier ! 🍎</div>';
-      return;
-    }
-
-    const medals  = ['🥇','🥈','🥉'];
-    const classes = ['gold','silver','bronze'];
-    panel.innerHTML = data.map((e, i) => {
-      const isMe = e.name === playerName;
-      const cls  = (i < 3 ? classes[i] : '') + (isMe ? ' me' : '');
-      const rank = i < 3 ? medals[i] : `#${i+1}`;
-      return `<div class="lb-row ${cls}">
-        <span class="lb-rank">${rank}</span>
-        <span class="lb-name">${escHtml(e.name)}</span>
-        <span class="lb-score">${e.score} 🍎</span>
-      </div>`;
-    }).join('');
-  } catch (e) {
-    panel.innerHTML = '<div class="lb-empty">Erreur de connexion 😕</div>';
-    console.warn('Erreur leaderboard (exception):', e.message || e);
-  }
-}
-
-function escHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-// ── Effets visuels ─────────────────────────────────────────────
-function launchConfetti() {
-  const items = ["🍎","🍏","✨","🌟","🎉","🏆","💥"];
-  for (let i = 0; i < 22; i++) {
-    const c = document.createElement("div");
-    c.className = "confetti";
-    c.textContent = items[Math.floor(Math.random() * items.length)];
-    c.style.left = Math.random() * 100 + "vw";
-    c.style.fontSize = (18 + Math.random() * 20) + "px";
-    c.style.animationDuration = (1.2 + Math.random() * 1.8) + "s";
-    c.style.animationDelay = Math.random() * 0.4 + "s";
-    document.body.appendChild(c);
-    setTimeout(() => c.remove(), 3000);
-  }
-}
-
-function spawnParticles(x, y) {
-  const emojis = ["🍎","✨","🌿","⭐","🍃","💫"];
-  for (let i = 0; i < 5; i++) {
-    const p = document.createElement("div");
-    p.className = "particle";
-    p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-    const angle = (Math.PI * 2 / 5) * i + Math.random() * 0.4;
-    const dist  = 50 + Math.random() * 70;
-    p.style.setProperty("--dx", Math.cos(angle) * dist + "px");
-    p.style.setProperty("--dy", Math.sin(angle) * dist - 30 + "px");
-    p.style.left = x + "px"; p.style.top = y + "px";
-    document.body.appendChild(p);
-    setTimeout(() => p.remove(), 800);
-  }
-}
-
-function showPopup(x, y, text) {
   const p = document.createElement("div");
-  p.className = "score-popup";
-  p.textContent = text;
-  p.style.left = x + "px"; p.style.top = y + "px";
-  document.body.appendChild(p);
-  setTimeout(() => p.remove(), 900);
-}
-</script>
 
-</body>
-</html>
+  p.className = "popup";
+
+  p.textContent = text;
+
+  p.style.left = x + "px";
+  p.style.top = y + "px";
+
+  document.body.appendChild(p);
+
+  setTimeout(()=>{
+    p.remove();
+  },1000);
+}
+
+function confetti(){
+
+  const emojis = ["🎉","✨","🍎","🍏","🏆"];
+
+  for(let i=0;i<20;i++){
+
+    const c = document.createElement("div");
+
+    c.className = "confetti";
+
+    c.textContent =
+      emojis[Math.floor(Math.random()*emojis.length)];
+
+    c.style.left = Math.random()*100 + "vw";
+
+    c.style.animationDuration =
+      (2 + Math.random()*2) + "s";
+
+    document.body.appendChild(c);
+
+    setTimeout(()=>{
+      c.remove();
+    },4000);
+  }
+}
+
+function unlock(text){
+
+  if(achievements.includes(text)) return;
+
+  achievements.push(text);
+
+  const div = document.createElement("div");
+
+  div.textContent = "🏆 " + text;
+
+  achievementsEl.appendChild(div);
+
+  confetti();
+}
+
+btn.addEventListener("click",(e)=>{
+
+  if(gameOver) return;
+
+  if(!gameStarted){
+
+    gameStarted = true;
+
+    startTimer();
+  }
+
+  let gain = 1;
+
+  let random = Math.random();
+
+  // 🍏 pomme rare
+  if(random < 0.05){
+
+    gain = 10;
+
+    messageEl.textContent = "🍏 POMME RARE +10";
+
+    timer += 2;
+
+    timerEl.textContent = timer;
+
+    btn.textContent = "🍏";
+  }
+
+  // 💎 jackpot
+  if(random < 0.01){
+
+    gain = 25;
+
+    messageEl.textContent = "💎 JACKPOT +25";
+
+    timer += 5;
+
+    timerEl.textContent = timer;
+
+    btn.textContent = "💎";
+  }
+
+  // ⚡ combo
+  combo++;
+
+  clearTimeout(comboTimeout);
+
+  comboTimeout = setTimeout(()=>{
+    combo = 0;
+    comboEl.textContent = combo;
+  },1200);
+
+  if(combo >= 10){
+
+    gain *= 5;
+
+    messageEl.textContent = "🔥 COMBO x5";
+  }
+
+  else if(combo >= 5){
+
+    gain *= 2;
+
+    messageEl.textContent = "⚡ COMBO x2";
+  }
+
+  score += gain;
+
+  scoreEl.textContent = score;
+
+  comboEl.textContent = combo;
+
+  popup(e.clientX,e.clientY,"+" + gain);
+
+  // 🏆 succès
+  if(score >= 50){
+    unlock("50 points !");
+  }
+
+  if(score >= 100){
+    unlock("100 points !");
+  }
+
+  if(combo >= 10){
+    unlock("Combo x10 !");
+  }
+
+  // 🎉 bonus
+  if(score % 50 === 0){
+    confetti();
+  }
+
+  setTimeout(()=>{
+    btn.textContent = "🍎";
+  },300);
+
+});
