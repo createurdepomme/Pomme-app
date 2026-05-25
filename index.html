@@ -278,7 +278,7 @@ h2 {
   </div>
   <div class="btn-row">
     <button class="btn-green" id="replayBtn">🔄 Rejouer</button>
-    <button class="btn-red"   id="changeNameBtn">👤 Changer</button>
+    <button class="btn-red"   id="homeBtn">🏠 Accueil</button>
   </div>
 </div>
 
@@ -410,9 +410,11 @@ function startFreshGame() {
 
 document.getElementById('resetBtn').addEventListener('click', startFreshGame);
 document.getElementById('replayBtn').addEventListener('click', startFreshGame);
-document.getElementById('changeNameBtn').addEventListener('click', () => {
-  document.getElementById('nameInput').value = '';
-  showScreen(screenName);
+document.getElementById('homeBtn').addEventListener('click', () => {
+  clearInterval(timerInterval);
+  clearTimeout(phaseTimeout);
+  clearTimeout(moveTimeout);
+  showScreen(screenMode);
 });
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -487,11 +489,12 @@ function moveButton() {
   btn.style.height = buttonSize + "px";
   btn.style.fontSize = (buttonSize * 0.5) + "px";
   
-  // Position aléatoire sur l'écran
+  // Position aléatoire sur l'écran avec zone d'exclusion
+  // Éviter le bouton "Recommencer" en bas (zone de 80px de haut)
   const maxX = window.innerWidth - buttonSize - 40;
-  const maxY = window.innerHeight - buttonSize - 60;
-  const randomX = Math.random() * maxX;
-  const randomY = Math.random() * maxY;
+  const maxY = window.innerHeight - buttonSize - 120; // Laisse plus de place en bas
+  const randomX = Math.random() * Math.max(100, maxX);
+  const randomY = Math.random() * Math.max(100, maxY);
   
   btn.style.position = "fixed";
   btn.style.left = randomX + "px";
@@ -579,6 +582,8 @@ btn.addEventListener("click", (e) => {
   let msgText = messages[Math.floor(Math.random() * messages.length)];
   if (gameMode === 'defi') {
     msgText += ` (×${phaseMultiplier})`;
+  } else if (gameMode === 'reaction') {
+    msgText = "🎯 Attrapée !";
   }
   messageEl.textContent = msgText;
 
@@ -591,8 +596,11 @@ btn.addEventListener("click", (e) => {
     } else {
       progressBar.style.width = '100%';
     }
-  } else {
+  } else if (gameMode === 'defi') {
     const progress = (clicks / 500) * 100;
+    progressBar.style.width = Math.min(progress, 100) + '%';
+  } else if (gameMode === 'reaction') {
+    const progress = (clicks / 300) * 100;
     progressBar.style.width = Math.min(progress, 100) + '%';
   }
 
@@ -624,6 +632,11 @@ btn.addEventListener("click", (e) => {
     gameCard.classList.remove("shake"); void gameCard.offsetWidth; gameCard.classList.add("shake");
     launchConfetti();
     showPopup(e.clientX, e.clientY - 30, "BONUS ! 🎉");
+  }
+  
+  // Mode RÉACTION : relancer le mouvement après le clic
+  if (gameMode === 'reaction') {
+    moveButton();
   }
 });
 
