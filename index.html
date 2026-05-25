@@ -232,16 +232,12 @@ h2 {
 </head>
 <body>
 
-<!-- ════ ÉCRAN 1 : PSEUDO ════ -->
-
 <div class="card" id="screen-name">
   <h1>🍎 Pomme</h1>
   <p>Entre ton pseudo pour jouer !</p>
   <input type="text" id="nameInput" maxlength="16" placeholder="Ton pseudo..." autocomplete="off" />
   <button class="btn-green" id="nameConfirmBtn">🍎 Jouer !</button>
 </div>
-
-<!-- ════ ÉCRAN 2 : JEU ════ -->
 
 <div class="card hidden" id="screen-game">
   <h1>Pomme</h1>
@@ -256,8 +252,6 @@ h2 {
   <div class="progress-wrap"><div id="progressBar"></div></div>
   <button class="btn-red" id="resetBtn">🔄 Recommencer</button>
 </div>
-
-<!-- ════ ÉCRAN 3 : FIN + CLASSEMENT ════ -->
 
 <div class="card hidden" id="screen-end">
   <h2>⏰ Temps écoulé !</h2>
@@ -276,13 +270,9 @@ h2 {
 <script>
 document.addEventListener("gesturestart", e => e.preventDefault());
 
-// ── Supabase (initialisation protégée) ────────────────────────
 const SUPABASE_URL = "https://qaofelxfekofzkuhsvir.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFhb2ZlbHhmZWtvZnprdWhzdmlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mzg3NjAsImV4cCI6MjA5MzExNDc2MH0.eQI91OCDJVRz-dFr6omZlAlhQtZ06xMslArTduZJRC8";
 
-// ✅ CORRECTION : on entoure l'init Supabase dans un try/catch.
-// Si le script CDN n'a pas chargé (réseau lent, bloqué…), db reste
-// null et le jeu fonctionne quand même sans classement.
 let db = null;
 try {
   db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -290,14 +280,18 @@ try {
   console.warn('Supabase non disponible – classement désactivé.', e);
 }
 
-// ── État ───────────────────────────────────────────────────────
 let clicks        = 0;
 let bestScore     = parseInt(localStorage.getItem('pomme_best') || '0');
+let coins         = parseInt(localStorage.getItem('pomme_coins') || '0');
 let timerLeft     = 30;
 let timerInterval = null;
 let gameStarted   = false;
 let gameOver      = false;
 let playerName    = '';
+let scoreMultiplier = 1;
+let combo = 0;
+let comboTimeout = null; 
+let rareBoost = false;
 
 const messages = [
   "Miam ! 😋","Croquant ! 🎵","Délicieux ! 🌟","Encore ! ✨",
@@ -305,7 +299,6 @@ const messages = [
   "Tu es inarrêtable ! 💪","Génie ! 🧠","Trop fort ! 🔥","Waouw ! 🤩"
 ];
 
-// ── DOM ────────────────────────────────────────────────────────
 const screenName  = document.getElementById('screen-name');
 const screenGame  = document.getElementById('screen-game');
 const screenEnd   = document.getElementById('screen-end');
@@ -320,13 +313,11 @@ const gameCard    = document.getElementById('screen-game');
 
 bestScoreEl.textContent = bestScore;
 
-// ── Navigation ─────────────────────────────────────────────────
 function showScreen(screen) {
   [screenName, screenGame, screenEnd].forEach(s => s.classList.add('hidden'));
   screen.classList.remove('hidden');
 }
 
-// ── Écran 1 : Pseudo ──────────────────────────────────────────
 document.getElementById('nameConfirmBtn').addEventListener('click', confirmName);
 document.getElementById('nameInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') confirmName();
@@ -340,7 +331,6 @@ function confirmName() {
   startFreshGame();
 }
 
-// ── Écran 2 : Jeu ─────────────────────────────────────────────
 function startFreshGame() {
   clicks = 0; timerLeft = 30; gameStarted = false; gameOver = false;
   clearInterval(timerInterval);
@@ -362,7 +352,6 @@ document.getElementById('changeNameBtn').addEventListener('click', () => {
   showScreen(screenName);
 });
 
-// ── Audio ──────────────────────────────────────────────────────
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function playClick() {
@@ -389,7 +378,6 @@ function playBonus() {
   });
 }
 
-// ── Timer ──────────────────────────────────────────────────────
 function startTimer() {
   timerInterval = setInterval(() => {
     timerLeft--;
@@ -414,7 +402,6 @@ async function endGame() {
   await renderLeaderboard();
 }
 
-// ── Niveau ─────────────────────────────────────────────────────
 function getNiveau(n) {
   if (n < 20)  return { label:"Niveau 1 🌱", next:20 };
   if (n < 50)  return { label:"Niveau 2 🍀", next:50 };
@@ -423,12 +410,77 @@ function getNiveau(n) {
   return { label:"Niveau MAX 👑", next:null };
 }
 
-// ── Clic principal ─────────────────────────────────────────────
 btn.addEventListener("click", (e) => {
   if (gameOver) return;
   if (!gameStarted) { gameStarted = true; startTimer(); }
   audioCtx.resume();
-  clicks++;
+ let gain = 1;
+// 🍏 Pomme rare
+if (Math.random() < 0.08) {
+  gain = 5;
+
+  rareBoost = true;
+
+  btn.textContent = "🍏";
+
+  messageEl.textContent = "🍏 POMME RARE +5 !!!";
+
+  coins += 5;
+
+  localStorage.setItem('pomme_coins', coins);
+
+  setTimeout(() => {
+    btn.textContent = "🍎";
+    rareBoost = false;
+  }, 500);
+
+} else {
+  btn.textContent = "🍎";
+}
+
+gain *= scoreMultiplier;
+
+clicks += gain;
+
+combo++;
+
+clearTimeout(comboTimeout);
+
+comboTimeout = setTimeout(() => {
+  combo = 0;
+  scoreMultiplier = 1;
+}, 1500);
+
+if (combo >= 10) {
+  scoreMultiplier = 3;
+}
+else if (combo >= 5) {
+  scoreMultiplier = 2;
+}
+else {
+  scoreMultiplier = 1;
+}
+
+combo++;
+
+clearTimeout(comboTimeout);
+
+comboTimeout = setTimeout(() => {
+  combo = 0;
+  scoreMultiplier = 1;
+}, 1500);
+
+// 🔥 Multiplicateurs
+if (combo >= 10) {
+  scoreMultiplier = 3;
+}
+else if (combo >= 5) {
+  scoreMultiplier = 2;
+}
+else {
+  scoreMultiplier = 1;
+}
+
   playClick();
   counter.textContent   = "Clics : " + clicks;
   messageEl.textContent = messages[Math.floor(Math.random() * messages.length)];
@@ -442,8 +494,36 @@ btn.addEventListener("click", (e) => {
     progressBar.style.width = '100%';
   }
 
+if (clicks >= 50 && !achievements.includes("50")) {
+
+  achievements.push("50");
+
+  showPopup(window.innerWidth / 2, 120, "🏆 50 clics !");
+}
+
+if (clicks >= 100 && !achievements.includes("100")) {
+
+  achievements.push("100");
+
+  showPopup(window.innerWidth / 2, 120, "🏆 100 clics !");
+}
+
   spawnParticles(e.clientX, e.clientY);
   showPopup(e.clientX, e.clientY, "+1");
+
+// ⏱ Bonus temps
+if (clicks % 25 === 0) {
+  timerLeft += 5;
+
+  showPopup(e.clientX, e.clientY - 60, "+5s ⏱");
+}
+
+if (clicks % 25 === 0) {
+
+  timerLeft += 5;
+
+  showPopup(e.clientX, e.clientY - 60, "+5s ⏱");
+}
 
   if (clicks % 10 === 0) {
     playBonus();
@@ -455,8 +535,6 @@ btn.addEventListener("click", (e) => {
   }
 });
 
-// ── Supabase : sauvegarder le score ───────────────────────────
-// ✅ CORRECTION : on vérifie que db n'est pas null avant d'appeler Supabase
 async function saveScore(name, score) {
   if (!db) return;
 
@@ -507,9 +585,6 @@ async function saveScore(name, score) {
   }
 }
 
-// ── Supabase : afficher le classement ─────────────────────────
-// ✅ CORRECTION : on vérifie que db n'est pas null avant d'appeler Supabase
-
 async function renderLeaderboard() {
   const panel = document.getElementById('leaderboard-panel');
 
@@ -529,8 +604,7 @@ async function renderLeaderboard() {
       .order('score', { ascending: false })
       .limit(20);
 
-    // ✅ On gère l'erreur inline (plus de throw) pour éviter [object Object]
-    if (error) {
+   
       console.log("ERREUR SUPABASE :", error);
       panel.innerHTML = '<div class="lb-empty">Erreur classement 😕</div>';
       console.warn('Erreur leaderboard:', error.message || JSON.stringify(error));
