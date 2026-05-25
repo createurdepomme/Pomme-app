@@ -117,6 +117,8 @@ h2 {
   transition: transform 0.12s, box-shadow 0.12s;
   animation: floatBtn 3s ease-in-out infinite;
   outline: none;
+  z-index: 100;
+  pointer-events: auto;
 }
 #appleBtn:hover  { transform: scale(1.07); }
 #appleBtn:active { transform: scale(0.9); }
@@ -511,15 +513,18 @@ function moveButton() {
 
 async function endGame() {
   clearInterval(timerInterval);
+  clearTimeout(moveTimeout);
   gameOver = true;
   if (clicks > bestScore) {
     bestScore = clicks;
     localStorage.setItem('pomme_best', bestScore);
   }
+  
+  const modeLabel = gameMode === 'defi' ? '⚡ DÉFI' : gameMode === 'reaction' ? '🎯 RÉACTION' : '⏱ CLASSIQUE';
   document.getElementById('finalMsg').textContent =
-    `${playerName}, tu as cliqué ${clicks} fois ! 🍎  Ton record : ${bestScore}`;
+    `${playerName}, tu as cliqué ${clicks} fois ! 🍎\nMode: ${modeLabel} | Record: ${bestScore}`;
   showScreen(screenEnd);
-  await saveScore(playerName, bestScore);
+  await saveScore(playerName, bestScore, gameMode);
   await renderLeaderboard();
 }
 
@@ -535,6 +540,12 @@ btn.addEventListener("click", (e) => {
   if (gameOver) return;
   if (!gameStarted) { gameStarted = true; startTimer(); }
   audioCtx.resume();
+
+  // Forcer le focus sur le bouton en Mode Réaction
+  if (gameMode === 'reaction') {
+    e.preventDefault();
+    e.stopPropagation();
+  }
 
   let gain = 1;
 
@@ -638,17 +649,18 @@ btn.addEventListener("click", (e) => {
   if (gameMode === 'reaction') {
     moveButton();
   }
-});
+}, { passive: false });
 
-async function saveScore(name, score) {
+async function saveScore(name, score, mode = 'classic') {
   if (!db) return;
 
   try {
-    // Chercher le score existant
+    // Chercher le score existant pour ce mode
     const { data: existing, error: selectError } = await db
       .from('scores')
       .select('id, score')
       .eq('name', name)
+      .eq('mode', mode)
       .maybeSingle();
 
     if (selectError) {
@@ -668,10 +680,10 @@ async function saveScore(name, score) {
         }
       }
     } else {
-      // Insérer un nouveau score
+      // Insérer un nouveau score avec le mode
       const { error: insertError } = await db
         .from('scores')
-        .insert([{ name, score }]);
+        .insert([{ name, score, mode }]);
       if (insertError) {
         console.warn('Erreur saveScore (insert):', insertError.message);
       }
@@ -694,7 +706,8 @@ async function renderLeaderboard() {
   try {
     const { data, error } = await db
       .from('scores')
-      .select('name, score')
+      .select('name, score, mode')
+      .eq('mode', gameMode)
       .order('score', { ascending: false })
       .limit(20);
 
