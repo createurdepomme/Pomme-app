@@ -239,6 +239,23 @@ h2 {
   <button class="btn-green" id="nameConfirmBtn">🍎 Jouer !</button>
 </div>
 
+<div class="card hidden" id="screen-mode">
+  <h1>🍎 Pomme</h1>
+  <p>Choisis ton mode de jeu !</p>
+  <button class="btn-green" id="modeClassicBtn" style="width: 100%; margin-bottom: 12px;">
+    <div style="font-size: 1.8rem; margin-bottom: 6px;">⏱ CLASSIQUE</div>
+    <div style="font-size: 0.85rem; font-weight: 400;">30 secondes • Gameplay normal</div>
+  </button>
+  <button class="btn-green" id="modeDefiBtn" style="width: 100%; background: linear-gradient(135deg,#ff6f00,#e65100); box-shadow: 0 4px 0 #bf360c;">
+    <div style="font-size: 1.8rem; margin-bottom: 6px;">⚡ DÉFI</div>
+    <div style="font-size: 0.85rem; font-weight: 400;">40 secondes • Multiplicateurs changeants</div>
+  </button>
+  <button class="btn-green" id="modeReactionBtn" style="width: 100%; background: linear-gradient(135deg,#d32f2f,#b71c1c); box-shadow: 0 4px 0 #7f0000; margin-top: 12px;">
+    <div style="font-size: 1.8rem; margin-bottom: 6px;">🎯 RÉACTION</div>
+    <div style="font-size: 0.85rem; font-weight: 400;">25 secondes • Le bouton se déplace !</div>
+  </button>
+</div>
+
 <div class="card hidden" id="screen-game">
   <h1>Pomme</h1>
   <div class="stats-row">
@@ -292,6 +309,11 @@ let scoreMultiplier = 1;
 let combo         = 0;
 let comboTimeout  = null; 
 let achievements  = JSON.parse(localStorage.getItem('pomme_achievements') || '[]');
+let gameMode      = 'classic'; // 'classic' ou 'defi' ou 'reaction'
+let phaseMultiplier = 1;
+let phaseTimeout  = null;
+let buttonSize    = 200;
+let moveTimeout   = null;
 
 const messages = [
   "Miam ! 😋","Croquant ! 🎵","Délicieux ! 🌟","Encore ! ✨",
@@ -300,6 +322,7 @@ const messages = [
 ];
 
 const screenName  = document.getElementById('screen-name');
+const screenMode  = document.getElementById('screen-mode');
 const screenGame  = document.getElementById('screen-game');
 const screenEnd   = document.getElementById('screen-end');
 const btn         = document.getElementById('appleBtn');
@@ -314,7 +337,7 @@ const gameCard    = document.getElementById('screen-game');
 bestScoreEl.textContent = bestScore;
 
 function showScreen(screen) {
-  [screenName, screenGame, screenEnd].forEach(s => s.classList.add('hidden'));
+  [screenName, screenMode, screenGame, screenEnd].forEach(s => s.classList.add('hidden'));
   screen.classList.remove('hidden');
 }
 
@@ -328,20 +351,59 @@ function confirmName() {
   if (!val) { document.getElementById('nameInput').focus(); return; }
   playerName = val;
   localStorage.setItem('pomme_name', playerName);
-  startFreshGame();
+  showScreen(screenMode);
 }
 
+document.getElementById('modeClassicBtn').addEventListener('click', () => {
+  gameMode = 'classic';
+  startFreshGame();
+});
+
+document.getElementById('modeDefiBtn').addEventListener('click', () => {
+  gameMode = 'defi';
+  startFreshGame();
+});
+
+document.getElementById('modeReactionBtn').addEventListener('click', () => {
+  gameMode = 'reaction';
+  startFreshGame();
+});
+
 function startFreshGame() {
-  clicks = 0; timerLeft = 30; gameStarted = false; gameOver = false;
-  combo = 0; scoreMultiplier = 1;
+  clicks = 0; 
+  timerLeft = gameMode === 'defi' ? 40 : gameMode === 'reaction' ? 25 : 30;
+  gameStarted = false; 
+  gameOver = false;
+  combo = 0; 
+  scoreMultiplier = 1;
+  phaseMultiplier = 1;
+  buttonSize = 200;
   clearInterval(timerInterval);
+  clearTimeout(phaseTimeout);
+  clearTimeout(moveTimeout);
   counter.textContent     = "Clics : 0";
-  messageEl.textContent   = "Appuie pour commencer !";
-  niveauEl.textContent    = "Niveau 1 🌱";
-  timerDisp.textContent   = "30";
+  
+  let msgInit = "Appuie pour commencer !";
+  let niveauInit = "Niveau 1 🌱";
+  if (gameMode === 'defi') {
+    msgInit = "⚡ Mode DÉFI - Multiplicateurs changeants !";
+    niveauInit = "DÉFI 🔥";
+  } else if (gameMode === 'reaction') {
+    msgInit = "🎯 Mode RÉACTION - Attrape la pomme !";
+    niveauInit = "RÉACTION 🎯";
+  }
+  
+  messageEl.textContent   = msgInit;
+  niveauEl.textContent    = niveauInit;
+  timerDisp.textContent   = timerLeft;
   timerDisp.parentElement.style.color = '#2e7d32';
   progressBar.style.width = "0%";
   btn.textContent         = "🍎";
+  btn.style.width         = "200px";
+  btn.style.height        = "200px";
+  btn.style.position      = "relative";
+  btn.style.left          = "0";
+  btn.style.top           = "0";
   bestScoreEl.textContent = bestScore;
   showScreen(screenGame);
 }
@@ -380,12 +442,68 @@ function playBonus() {
 }
 
 function startTimer() {
+  // Mode DÉFI : initialiser les phases de multiplicateurs
+  if (gameMode === 'defi') {
+    changePhase();
+  }
+  
+  // Mode RÉACTION : commencer à déplacer le bouton
+  if (gameMode === 'reaction') {
+    moveButton();
+  }
+  
   timerInterval = setInterval(() => {
     timerLeft--;
     timerDisp.textContent = timerLeft;
     if (timerLeft <= 5) timerDisp.parentElement.style.color = '#c62828';
     if (timerLeft <= 0) endGame();
   }, 1000);
+}
+
+function changePhase() {
+  if (gameMode !== 'defi' || gameOver) return;
+  
+  // Multiplicateurs aléatoires : 2x, 3x, ou 4x
+  const phases = [2, 3, 4];
+  phaseMultiplier = phases[Math.floor(Math.random() * phases.length)];
+  
+  // Durée aléatoire : 4-6 secondes
+  const duration = 4000 + Math.random() * 2000;
+  
+  showPopup(window.innerWidth / 2, 200, `Phase ×${phaseMultiplier} ! ⚡`);
+  
+  clearTimeout(phaseTimeout);
+  phaseTimeout = setTimeout(() => {
+    changePhase();
+  }, duration);
+}
+
+function moveButton() {
+  if (gameMode !== 'reaction' || gameOver) return;
+  
+  // Réduire la taille progressivement
+  buttonSize = Math.max(80, buttonSize - 8);
+  btn.style.width = buttonSize + "px";
+  btn.style.height = buttonSize + "px";
+  btn.style.fontSize = (buttonSize * 0.5) + "px";
+  
+  // Position aléatoire sur l'écran
+  const maxX = window.innerWidth - buttonSize - 40;
+  const maxY = window.innerHeight - buttonSize - 60;
+  const randomX = Math.random() * maxX;
+  const randomY = Math.random() * maxY;
+  
+  btn.style.position = "fixed";
+  btn.style.left = randomX + "px";
+  btn.style.top = randomY + "px";
+  
+  // Vitesse de déplacement augmente avec le temps
+  const speed = 400 + (clicks / 5) * 50;
+  
+  clearTimeout(moveTimeout);
+  moveTimeout = setTimeout(() => {
+    moveButton();
+  }, speed);
 }
 
 async function endGame() {
@@ -429,6 +547,11 @@ btn.addEventListener("click", (e) => {
     }, 500);
   }
 
+  // Mode DÉFI : multiplicateur de phase
+  if (gameMode === 'defi') {
+    gain *= phaseMultiplier;
+  }
+
   // Appliquer le gain et multiplier
   gain *= scoreMultiplier;
   clicks += gain;
@@ -452,15 +575,25 @@ btn.addEventListener("click", (e) => {
 
   playClick();
   counter.textContent   = "Clics : " + clicks;
-  messageEl.textContent = messages[Math.floor(Math.random() * messages.length)];
+  
+  let msgText = messages[Math.floor(Math.random() * messages.length)];
+  if (gameMode === 'defi') {
+    msgText += ` (×${phaseMultiplier})`;
+  }
+  messageEl.textContent = msgText;
 
   const niv = getNiveau(clicks);
-  niveauEl.textContent = niv.label;
-  if (niv.next) {
-    const prev = clicks < 20 ? 0 : clicks < 50 ? 20 : clicks < 100 ? 50 : 100;
-    progressBar.style.width = ((clicks - prev) / (niv.next - prev) * 100) + '%';
+  if (gameMode === 'classic') {
+    niveauEl.textContent = niv.label;
+    if (niv.next) {
+      const prev = clicks < 20 ? 0 : clicks < 50 ? 20 : clicks < 100 ? 50 : 100;
+      progressBar.style.width = ((clicks - prev) / (niv.next - prev) * 100) + '%';
+    } else {
+      progressBar.style.width = '100%';
+    }
   } else {
-    progressBar.style.width = '100%';
+    const progress = (clicks / 500) * 100;
+    progressBar.style.width = Math.min(progress, 100) + '%';
   }
 
   // Achievements
@@ -479,7 +612,7 @@ btn.addEventListener("click", (e) => {
   showPopup(e.clientX, e.clientY, "+1");
 
   // ⏱ Bonus temps (une seule fois)
-  if (clicks % 25 === 0) {
+  if (clicks % 100 === 0) {
     timerLeft += 5;
     showPopup(e.clientX, e.clientY - 60, "+5s ⏱");
   }
