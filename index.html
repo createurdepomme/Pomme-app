@@ -58,7 +58,7 @@ p {
   margin-bottom: 18px;
 }
 
-.btn-green, .btn-red {
+.btn-green, .btn-red, .btn-orange {
   padding: 10px 26px;
   font-family: 'Fredoka One', cursive;
   font-size: 1rem;
@@ -399,7 +399,6 @@ const ui = {
 function showScreen(screen) {
   Object.values(screens).forEach(s => s.classList.add('hidden'));
   screen.classList.remove('hidden');
-  // Cacher le bouton pomme si on n'est pas sur l'écran de jeu
   ui.btn.style.visibility = (screen === screens.game) ? 'visible' : 'hidden';
   ui.btn.disabled = (screen !== screens.game);
 }
@@ -429,12 +428,12 @@ function startGame() {
   scoreMultiplier = 1;
   phaseMultiplier = 1;
   buttonSize = 200;
-  
+
   clearInterval(timerInterval);
   clearTimeout(comboTimeout);
   clearTimeout(phaseTimeout);
   clearTimeout(moveTimeout);
-  
+
   ui.counter.textContent = "Clics : 0";
   ui.message.textContent = gameMode === 'defi' ? "⚡ Mode DÉFI - Multiplicateurs changeants !" : gameMode === 'reaction' ? "🎯 Mode RÉACTION - Attrape la pomme !" : "Appuie pour commencer !";
   ui.niveau.textContent = gameMode === 'defi' ? "DÉFI 🔥" : gameMode === 'reaction' ? "RÉACTION 🎯" : "Niveau 1 🌱";
@@ -449,7 +448,7 @@ function startGame() {
   ui.btn.style.height = "200px";
   ui.btn.disabled = false;
   ui.best.textContent = bestScore;
-  
+
   showScreen(screens.game);
 }
 
@@ -489,7 +488,7 @@ ui.btn.addEventListener('click', (e) => {
     startTimer();
   }
   audioCtx.resume();
-  
+
   let gain = 1;
   if (Math.random() < 0.08) {
     gain = 5;
@@ -497,33 +496,33 @@ ui.btn.addEventListener('click', (e) => {
     ui.message.textContent = "🍏 POMME RARE +5 !!!";
     setTimeout(() => { ui.btn.textContent = "🍎"; }, 500);
   }
-  
+
   if (gameMode === 'defi') gain *= phaseMultiplier;
   gain *= scoreMultiplier;
   clicks += gain;
-  
+
   combo++;
   clearTimeout(comboTimeout);
   comboTimeout = setTimeout(() => { combo = 0; scoreMultiplier = 1; }, 1500);
   scoreMultiplier = combo >= 10 ? 3 : combo >= 5 ? 2 : 1;
-  
+
   playClick();
   ui.counter.textContent = "Clics : " + clicks;
   let msg = messages[Math.floor(Math.random() * messages.length)];
   if (gameMode === 'defi') msg += ` (×${phaseMultiplier})`;
   if (gameMode === 'reaction') msg = "🎯 Attrapée !";
   ui.message.textContent = msg;
-  
+
   updateProgress();
-  
+
   spawnParticles(e.clientX, e.clientY);
   showPopup(e.clientX, e.clientY, "+1");
-  
+
   if (clicks % 100 === 0) {
     timerLeft += 5;
     showPopup(e.clientX, e.clientY - 60, "+5s ⏱");
   }
-  
+
   if (clicks % 10 === 0) {
     playBonus();
     ui.btn.classList.remove("flash");
@@ -535,7 +534,7 @@ ui.btn.addEventListener('click', (e) => {
     launchConfetti();
     showPopup(e.clientX, e.clientY - 30, "BONUS ! 🎉");
   }
-  
+
   if (gameMode === 'reaction') moveButton();
 }, { passive: false });
 
@@ -556,7 +555,7 @@ function updateProgress() {
 function startTimer() {
   if (gameMode === 'defi') changePhase();
   if (gameMode === 'reaction') moveButton();
-  
+
   timerInterval = setInterval(() => {
     timerLeft--;
     ui.timer.textContent = timerLeft;
@@ -579,23 +578,22 @@ function moveButton() {
   ui.btn.style.width = buttonSize + "px";
   ui.btn.style.height = buttonSize + "px";
   ui.btn.style.fontSize = (buttonSize * 0.5) + "px";
-  
+
   const card = ui.gameCard.getBoundingClientRect();
   const margin = 16;
-
   const safeTop    = card.top + margin;
-  const safeBottom = card.top + 220; // limite absolue : jamais en dessous de 220px depuis le haut de la carte
+  const safeBottom = card.top + 220;
   const safeLeft   = card.left + margin;
   const safeRight  = card.right - buttonSize - margin;
-  
+
   const randomX = safeLeft + Math.random() * Math.max(0, safeRight - safeLeft);
   const randomY = safeTop  + Math.random() * Math.max(0, safeBottom - safeTop);
-  
+
   ui.btn.style.position = "fixed";
   ui.btn.style.transition = "left 0.15s ease, top 0.15s ease";
   ui.btn.style.left = randomX + "px";
   ui.btn.style.top  = randomY + "px";
-  
+
   const speed = Math.max(600, 1200 - clicks * 10);
   clearTimeout(moveTimeout);
   moveTimeout = setTimeout(() => moveButton(), speed);
@@ -610,7 +608,7 @@ async function endGame() {
     bestScore = clicks;
     localStorage.setItem('pomme_best', bestScore);
   }
-  
+
   const modeLabel = gameMode === 'defi' ? '⚡ DÉFI' : gameMode === 'reaction' ? '🎯 RÉACTION' : '⏱ CLASSIQUE';
   document.getElementById('finalMsg').textContent = `${playerName}, tu as cliqué ${clicks} fois ! 🍎\nMode: ${modeLabel} | Record: ${bestScore}`;
   showScreen(screens.end);
@@ -619,40 +617,30 @@ async function endGame() {
 }
 
 async function saveScore(name, score, mode) {
-  if (!db) {
-    console.warn('Supabase non disponible');
-    return;
-  }
-  
+  if (!db) { console.warn('Supabase non disponible'); return; }
   try {
-    // Chercher un score existant pour ce joueur et ce mode
     const { data: existing, error: selectError } = await db
       .from('scores')
       .select('id, score')
       .eq('name', name)
       .eq('mode', mode)
       .maybeSingle();
-    
-    if (selectError) {
-      console.error('Erreur select:', selectError);
-      return;
-    }
-    
+
+    if (selectError) { console.error('Erreur select:', JSON.stringify(selectError)); return; }
+
     if (existing) {
-      // Mettre à jour si le nouveau score est meilleur
       if (score > existing.score) {
         const { error: updateError } = await db
           .from('scores')
           .update({ score })
           .eq('id', existing.id);
-        if (updateError) console.error('Erreur update:', updateError);
+        if (updateError) console.error('Erreur update:', JSON.stringify(updateError));
       }
     } else {
-      // Insérer un nouveau score
       const { error: insertError } = await db
         .from('scores')
         .insert([{ name, score, mode }]);
-      if (insertError) console.error('Erreur insert:', insertError);
+      if (insertError) console.error('Erreur insert:', JSON.stringify(insertError));
     }
   } catch (e) {
     console.error('Exception saveScore:', e);
@@ -666,7 +654,7 @@ async function renderLeaderboard() {
     return;
   }
   panel.innerHTML = '<div style="text-align: center; padding: 16px;">Chargement... 🍎</div>';
-  
+
   try {
     const { data, error } = await db
       .from('scores')
@@ -674,18 +662,18 @@ async function renderLeaderboard() {
       .eq('mode', gameMode)
       .order('score', { ascending: false })
       .limit(20);
-    
+
     if (error) {
-      console.error('Erreur Supabase:', error);
+      console.error('Erreur Supabase:', JSON.stringify(error));
       panel.innerHTML = '<div style="text-align: center; padding: 16px;">Erreur de connexion 😕</div>';
       return;
     }
-    
+
     if (!data || data.length === 0) {
       panel.innerHTML = '<div style="text-align: center; padding: 16px;">Aucun score pour ce mode 🍎</div>';
       return;
     }
-    
+
     const medals = ['🥇', '🥈', '🥉'];
     const classes = ['gold', 'silver', 'bronze'];
     panel.innerHTML = data.map((e, i) => {
