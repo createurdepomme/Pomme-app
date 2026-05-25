@@ -289,9 +289,9 @@ let gameStarted   = false;
 let gameOver      = false;
 let playerName    = '';
 let scoreMultiplier = 1;
-let combo = 0;
-let comboTimeout = null; 
-let rareBoost = false;
+let combo         = 0;
+let comboTimeout  = null; 
+let achievements  = JSON.parse(localStorage.getItem('pomme_achievements') || '[]');
 
 const messages = [
   "Miam ! 😋","Croquant ! 🎵","Délicieux ! 🌟","Encore ! ✨",
@@ -333,6 +333,7 @@ function confirmName() {
 
 function startFreshGame() {
   clicks = 0; timerLeft = 30; gameStarted = false; gameOver = false;
+  combo = 0; scoreMultiplier = 1;
   clearInterval(timerInterval);
   counter.textContent     = "Clics : 0";
   messageEl.textContent   = "Appuie pour commencer !";
@@ -397,8 +398,7 @@ async function endGame() {
   document.getElementById('finalMsg').textContent =
     `${playerName}, tu as cliqué ${clicks} fois ! 🍎  Ton record : ${bestScore}`;
   showScreen(screenEnd);
-  await saveScore(playerName, clicks);
-  await saveScore(playerName, bestScore); // bestScore est déjà le max entre l'ancien et clicks
+  await saveScore(playerName, bestScore);
   await renderLeaderboard();
 }
 
@@ -414,72 +414,41 @@ btn.addEventListener("click", (e) => {
   if (gameOver) return;
   if (!gameStarted) { gameStarted = true; startTimer(); }
   audioCtx.resume();
- let gain = 1;
-// 🍏 Pomme rare
-if (Math.random() < 0.08) {
-  gain = 5;
 
-  rareBoost = true;
+  let gain = 1;
 
-  btn.textContent = "🍏";
+  // 🍏 Pomme rare
+  if (Math.random() < 0.08) {
+    gain = 5;
+    btn.textContent = "🍏";
+    messageEl.textContent = "🍏 POMME RARE +5 !!!";
+    coins += 5;
+    localStorage.setItem('pomme_coins', coins);
+    setTimeout(() => {
+      btn.textContent = "🍎";
+    }, 500);
+  }
 
-  messageEl.textContent = "🍏 POMME RARE +5 !!!";
+  // Appliquer le gain et multiplier
+  gain *= scoreMultiplier;
+  clicks += gain;
 
-  coins += 5;
+  // Gestion du combo (une seule fois)
+  combo++;
+  clearTimeout(comboTimeout);
+  comboTimeout = setTimeout(() => {
+    combo = 0;
+    scoreMultiplier = 1;
+  }, 1500);
 
-  localStorage.setItem('pomme_coins', coins);
-
-  setTimeout(() => {
-    btn.textContent = "🍎";
-    rareBoost = false;
-  }, 500);
-
-} else {
-  btn.textContent = "🍎";
-}
-
-gain *= scoreMultiplier;
-
-clicks += gain;
-
-combo++;
-
-clearTimeout(comboTimeout);
-
-comboTimeout = setTimeout(() => {
-  combo = 0;
-  scoreMultiplier = 1;
-}, 1500);
-
-if (combo >= 10) {
-  scoreMultiplier = 3;
-}
-else if (combo >= 5) {
-  scoreMultiplier = 2;
-}
-else {
-  scoreMultiplier = 1;
-}
-
-combo++;
-
-clearTimeout(comboTimeout);
-
-comboTimeout = setTimeout(() => {
-  combo = 0;
-  scoreMultiplier = 1;
-}, 1500);
-
-// 🔥 Multiplicateurs
-if (combo >= 10) {
-  scoreMultiplier = 3;
-}
-else if (combo >= 5) {
-  scoreMultiplier = 2;
-}
-else {
-  scoreMultiplier = 1;
-}
+  // Multiplicateurs
+  if (combo >= 10) {
+    scoreMultiplier = 3;
+  } else if (combo >= 5) {
+    scoreMultiplier = 2;
+  } else {
+    scoreMultiplier = 1;
+  }
 
   playClick();
   counter.textContent   = "Clics : " + clicks;
@@ -494,40 +463,30 @@ else {
     progressBar.style.width = '100%';
   }
 
-if (clicks >= 50 && !achievements.includes("50")) {
-
-  achievements.push("50");
-
-  showPopup(window.innerWidth / 2, 120, "🏆 50 clics !");
-}
-
-if (clicks >= 100 && !achievements.includes("100")) {
-
-  achievements.push("100");
-
-  showPopup(window.innerWidth / 2, 120, "🏆 100 clics !");
-}
+  // Achievements
+  if (clicks >= 50 && !achievements.includes("50")) {
+    achievements.push("50");
+    localStorage.setItem('pomme_achievements', JSON.stringify(achievements));
+    showPopup(window.innerWidth / 2, 120, "🏆 50 clics !");
+  }
+  if (clicks >= 100 && !achievements.includes("100")) {
+    achievements.push("100");
+    localStorage.setItem('pomme_achievements', JSON.stringify(achievements));
+    showPopup(window.innerWidth / 2, 120, "🏆 100 clics !");
+  }
 
   spawnParticles(e.clientX, e.clientY);
   showPopup(e.clientX, e.clientY, "+1");
 
-// ⏱ Bonus temps
-if (clicks % 25 === 0) {
-  timerLeft += 5;
+  // ⏱ Bonus temps (une seule fois)
+  if (clicks % 25 === 0) {
+    timerLeft += 5;
+    showPopup(e.clientX, e.clientY - 60, "+5s ⏱");
+  }
 
-  showPopup(e.clientX, e.clientY - 60, "+5s ⏱");
-}
-
-if (clicks % 25 === 0) {
-
-  timerLeft += 5;
-
-  showPopup(e.clientX, e.clientY - 60, "+5s ⏱");
-}
-
+  // 🎉 Bonus majeur tous les 10 clics
   if (clicks % 10 === 0) {
     playBonus();
-    btn.textContent = btn.textContent === "🍎" ? "🍏" : "🍎";
     btn.classList.remove("flash"); void btn.offsetWidth; btn.classList.add("flash");
     gameCard.classList.remove("shake"); void gameCard.offsetWidth; gameCard.classList.add("shake");
     launchConfetti();
@@ -539,49 +498,40 @@ async function saveScore(name, score) {
   if (!db) return;
 
   try {
-    // ✅ maybeSingle() retourne null (pas d'erreur) si aucune ligne trouvée
+    // Chercher le score existant
     const { data: existing, error: selectError } = await db
-    const { data, error } = await db
       .from('scores')
       .select('id, score')
       .eq('name', name)
       .maybeSingle();
-      .select('*')
-      .eq('name', name);
 
     if (selectError) {
       console.warn('Erreur saveScore (select):', selectError.message || JSON.stringify(selectError));
-    if (error) {
-      console.log(error);
       return;
     }
 
     if (existing) {
+      // Si le nouveau score est meilleur, mettre à jour
       if (score > existing.score) {
-        const { error: updateError } = await db.from('scores').update({ score }).eq('id', existing.id);
-        if (updateError) console.warn('Erreur saveScore (update):', updateError.message);
+        const { error: updateError } = await db
+          .from('scores')
+          .update({ score })
+          .eq('id', existing.id);
+        if (updateError) {
+          console.warn('Erreur saveScore (update):', updateError.message);
+        }
       }
     } else {
-      const { error: insertError } = await db.from('scores').insert([{ name, score }]);
-      if (insertError) console.warn('Erreur saveScore (insert):', insertError.message);
-    if (!data || data.length === 0) {
-      await db.from('scores').insert([{ name, score }]);
-      return;
+      // Insérer un nouveau score
+      const { error: insertError } = await db
+        .from('scores')
+        .insert([{ name, score }]);
+      if (insertError) {
+        console.warn('Erreur saveScore (insert):', insertError.message);
+      }
     }
   } catch (e) {
     console.warn('Erreur saveScore (exception):', e.message || e);
-
-    const bestOld = Math.max(...data.map(e => e.score));
-
-    if (score > bestOld) {
-      await db
-        .from('scores')
-        .update({ score })
-        .eq('name', name);
-    }
-
-  } catch (err) {
-    console.log(err);
   }
 }
 
@@ -589,7 +539,6 @@ async function renderLeaderboard() {
   const panel = document.getElementById('leaderboard-panel');
 
   if (!db) {
-    panel.innerHTML = '<div class="lb-empty">Classement indisponible 😕</div>';
     panel.innerHTML = '<div class="lb-empty">Classement indisponible (hors-ligne) 😕</div>';
     return;
   }
@@ -599,29 +548,21 @@ async function renderLeaderboard() {
   try {
     const { data, error } = await db
       .from('scores')
-      .select('*')
       .select('name, score')
       .order('score', { ascending: false })
       .limit(20);
 
-   
-      console.log("ERREUR SUPABASE :", error);
-      panel.innerHTML = '<div class="lb-empty">Erreur classement 😕</div>';
+    if (error) {
       console.warn('Erreur leaderboard:', error.message || JSON.stringify(error));
       panel.innerHTML = '<div class="lb-empty">Erreur de connexion 😕</div>';
       return;
     }
 
-    if (!data || data.length === 0) {
-      panel.innerHTML = '<div class="lb-empty">Aucun score 🍎</div>';
     if (!data || !data.length) {
       panel.innerHTML = '<div class="lb-empty">Aucun score encore. Sois le premier ! 🍎</div>';
       return;
     }
 
-    panel.innerHTML = data.map((e, i) => `
-      <div class="lb-row">
-        <span class="lb-rank">#${i + 1}</span>
     const medals  = ['🥇','🥈','🥉'];
     const classes = ['gold','silver','bronze'];
     panel.innerHTML = data.map((e, i) => {
@@ -632,17 +573,11 @@ async function renderLeaderboard() {
         <span class="lb-rank">${rank}</span>
         <span class="lb-name">${escHtml(e.name)}</span>
         <span class="lb-score">${e.score} 🍎</span>
-      </div>
-    `).join('');
-
-  } catch (err) {
-    console.log("ERREUR JS :", err);
-    panel.innerHTML = '<div class="lb-empty">Erreur réseau 😕</div>';
       </div>`;
     }).join('');
   } catch (e) {
-    panel.innerHTML = '<div class="lb-empty">Erreur de connexion 😕</div>';
     console.warn('Erreur leaderboard (exception):', e.message || e);
+    panel.innerHTML = '<div class="lb-empty">Erreur de connexion 😕</div>';
   }
 }
 
@@ -693,3 +628,4 @@ function showPopup(x, y, text) {
 </script>
 
 </body>
+</html>
