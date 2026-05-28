@@ -632,10 +632,21 @@ async function endGame() {
   clearTimeout(moveTimeout);
   gameOver = true;
   ui.btn.disabled = true;
+
+  // Optionnel : Tu devrais plutôt stocker un record par mode dans le localStorage
   if (clicks > bestScore) {
     bestScore = clicks;
     localStorage.setItem('pomme_best', bestScore);
   }
+
+  const modeLabel = gameMode === 'defi' ? '⚡ DÉFI' : gameMode === 'reaction' ? '🎯 RÉACTION' : '⏱ CLASSIQUE';
+  document.getElementById('finalMsg').textContent = `${playerName}, tu as cliqué ${clicks} fois ! 🍎\nMode: ${modeLabel} | Record: ${bestScore}`;
+  showScreen(screens.end);
+  
+  // ICI : On envoie le score de la partie en cours ('clicks'), pas le record global !
+  await saveScore(playerName, clicks, gameMode); 
+  await renderLeaderboard();
+}
 
   const modeLabel = gameMode === 'defi' ? '⚡ DÉFI' : gameMode === 'reaction' ? '🎯 RÉACTION' : '⏱ CLASSIQUE';
   document.getElementById('finalMsg').textContent = `${playerName}, tu as cliqué ${clicks} fois ! 🍎\nMode: ${modeLabel} | Record: ${bestScore}`;
@@ -646,28 +657,31 @@ async function endGame() {
 
 async function saveScore(name, score, mode) {
   try {
-    // Chercher score existant
+    // CORRECTION : On cherche s'il y a déjà une ligne pour CE joueur et CE mode précis
     const existing = await sbFetch(
       `scores?name=eq.${encodeURIComponent(name)}&mode=eq.${encodeURIComponent(mode)}&select=id,score&limit=1`
     );
 
     if (existing && existing.length > 0) {
+      // S'il a déjà joué à ce mode, on met à jour SEULEMENT si son nouveau score est meilleur
       if (score > existing[0].score) {
         await sbFetch(`scores?id=eq.${existing[0].id}`, {
           method: "PATCH",
-          body: JSON.stringify({ score })
+          body: JSON.stringify({ score: score })
         });
       }
     } else {
+      // S'il n'a jamais joué à ce mode, on crée une nouvelle ligne pour lui
       await sbFetch("scores", {
         method: "POST",
-        body: JSON.stringify({ name, score, mode })
+        body: JSON.stringify({ name: name, score: score, mode: mode })
       });
     }
   } catch (e) {
     console.error('Erreur saveScore:', e.message);
   }
 }
+
 
 async function renderLeaderboard() {
   const panel = document.getElementById('leaderboard-panel');
