@@ -58,7 +58,7 @@ p {
   margin-bottom: 18px;
 }
 
-.btn-green, .btn-red, .btn-orange {
+.btn-green, .btn-red {
   padding: 10px 26px;
   font-family: 'Fredoka One', cursive;
   font-size: 1rem;
@@ -71,7 +71,20 @@ p {
 
 .btn-green { background: linear-gradient(135deg,#43a047,#1b5e20); box-shadow: 0 4px 0 #0a3d0a; }
 .btn-red { background: linear-gradient(135deg,#e53935,#b71c1c); box-shadow: 0 4px 0 #7f0000; }
-.btn-orange { background: linear-gradient(135deg,#ff6f00,#e65100); box-shadow: 0 4px 0 #bf360c; }
+
+.btn-orange {
+  padding: 10px 26px;
+  font-family: 'Fredoka One', cursive;
+  font-size: 1rem;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: transform 0.1s;
+  background: linear-gradient(135deg,#ff6f00,#e65100);
+  box-shadow: 0 4px 0 #bf360c;
+}
+
 
 .btn-green:hover, .btn-red:hover, .btn-orange:hover { transform: translateY(-2px); }
 .btn-green:active, .btn-red:active, .btn-orange:active { transform: translateY(1px); }
@@ -179,16 +192,6 @@ input {
 }
 
 #resetBtn { margin-top: 14px; }
-
-#play-zone {
-  position: relative;
-  width: 100%;
-  height: 220px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: visible;
-}
 
 .btn-row { display: flex; gap: 10px; justify-content: center; }
 
@@ -341,9 +344,7 @@ input {
     <div class="stat-box">⏱ Temps<span id="timer">30</span></div>
     <div class="stat-box">🏆 Record<span id="best">0</span></div>
   </div>
-  <div id="play-zone">
-    <button id="appleBtn">🍎</button>
-  </div>
+  <button id="appleBtn">🍎</button>
   <div id="counter">Clics : 0</div>
   <div id="message">Appuie pour commencer !</div>
   <div id="niveau">Niveau 1 🌱</div>
@@ -371,25 +372,17 @@ document.addEventListener('touchmove', e => {
 }, { passive: false });
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
 const SUPABASE_URL = "https://qaofelxfekofzkuhsvir.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFhb2ZlbHhmZWtvZnprdWhzdmlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mzg3NjAsImV4cCI6MjA5MzExNDc2MH0.eQI91OCDJVRz-dFr6omZlAlhQtZ06xMslArTduZJRC8";
 
-const SB_HEADERS = {
-  "Content-Type": "application/json",
-  "apikey": SUPABASE_KEY,
-  "Authorization": "Bearer " + SUPABASE_KEY
-};
-
-async function sbFetch(path, options = {}) {
-  const res = await fetch(SUPABASE_URL + "/rest/v1/" + path, {
-    ...options,
-    headers: { ...SB_HEADERS, ...(options.headers || {}) }
-  });
-  const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
-  if (!res.ok) throw new Error(JSON.stringify(data));
-  return data;
+let db = null;
+try {
+  db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+} catch (e) {
+  console.warn('Supabase indisponible');
 }
 
 let clicks = 0, bestScore = 0, playerName = '', gameMode = 'classic', gameStarted = false, gameOver = false;
@@ -419,6 +412,7 @@ const ui = {
 function showScreen(screen) {
   Object.values(screens).forEach(s => s.classList.add('hidden'));
   screen.classList.remove('hidden');
+  // Cacher le bouton pomme si on n'est pas sur l'écran de jeu
   ui.btn.style.visibility = (screen === screens.game) ? 'visible' : 'hidden';
   ui.btn.disabled = (screen !== screens.game);
 }
@@ -448,12 +442,12 @@ function startGame() {
   scoreMultiplier = 1;
   phaseMultiplier = 1;
   buttonSize = 200;
-
+  
   clearInterval(timerInterval);
   clearTimeout(comboTimeout);
   clearTimeout(phaseTimeout);
   clearTimeout(moveTimeout);
-
+  
   ui.counter.textContent = "Clics : 0";
   ui.message.textContent = gameMode === 'defi' ? "⚡ Mode DÉFI - Multiplicateurs changeants !" : gameMode === 'reaction' ? "🎯 Mode RÉACTION - Attrape la pomme !" : "Appuie pour commencer !";
   ui.niveau.textContent = gameMode === 'defi' ? "DÉFI 🔥" : gameMode === 'reaction' ? "RÉACTION 🎯" : "Niveau 1 🌱";
@@ -462,21 +456,14 @@ function startGame() {
   ui.progressBar.style.width = "0%";
   ui.btn.textContent = "🍎";
   ui.btn.style.position = "relative";
-  ui.btn.style.left = "auto";
-  ui.btn.style.top = "auto";
+  ui.btn.style.left = "0";
+  ui.btn.style.top = "0";
   ui.btn.style.width = "200px";
   ui.btn.style.height = "200px";
-  ui.btn.style.fontSize = "100px";
-  ui.btn.style.transition = "";
   ui.btn.disabled = false;
   ui.best.textContent = bestScore;
-
-  // Fixer la hauteur de la carte en mode réaction pour éviter le rétrécissement
-  ui.gameCard.style.minHeight = '';
+  
   showScreen(screens.game);
-  if (gameMode === 'reaction') {
-    ui.gameCard.style.minHeight = ui.gameCard.offsetHeight + 'px';
-  }
 }
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -515,7 +502,7 @@ ui.btn.addEventListener('click', (e) => {
     startTimer();
   }
   audioCtx.resume();
-
+  
   let gain = 1;
   if (Math.random() < 0.08) {
     gain = 5;
@@ -523,33 +510,33 @@ ui.btn.addEventListener('click', (e) => {
     ui.message.textContent = "🍏 POMME RARE +5 !!!";
     setTimeout(() => { ui.btn.textContent = "🍎"; }, 500);
   }
-
+  
   if (gameMode === 'defi') gain *= phaseMultiplier;
   gain *= scoreMultiplier;
   clicks += gain;
-
+  
   combo++;
   clearTimeout(comboTimeout);
   comboTimeout = setTimeout(() => { combo = 0; scoreMultiplier = 1; }, 1500);
   scoreMultiplier = combo >= 10 ? 3 : combo >= 5 ? 2 : 1;
-
+  
   playClick();
   ui.counter.textContent = "Clics : " + clicks;
   let msg = messages[Math.floor(Math.random() * messages.length)];
   if (gameMode === 'defi') msg += ` (×${phaseMultiplier})`;
   if (gameMode === 'reaction') msg = "🎯 Attrapée !";
   ui.message.textContent = msg;
-
+  
   updateProgress();
-
+  
   spawnParticles(e.clientX, e.clientY);
   showPopup(e.clientX, e.clientY, "+1");
-
+  
   if (clicks % 100 === 0) {
     timerLeft += 5;
     showPopup(e.clientX, e.clientY - 60, "+5s ⏱");
   }
-
+  
   if (clicks % 10 === 0) {
     playBonus();
     ui.btn.classList.remove("flash");
@@ -561,7 +548,7 @@ ui.btn.addEventListener('click', (e) => {
     launchConfetti();
     showPopup(e.clientX, e.clientY - 30, "BONUS ! 🎉");
   }
-
+  
   if (gameMode === 'reaction') moveButton();
 }, { passive: false });
 
@@ -582,7 +569,7 @@ function updateProgress() {
 function startTimer() {
   if (gameMode === 'defi') changePhase();
   if (gameMode === 'reaction') moveButton();
-
+  
   timerInterval = setInterval(() => {
     timerLeft--;
     ui.timer.textContent = timerLeft;
@@ -605,23 +592,23 @@ function moveButton() {
   ui.btn.style.width = buttonSize + "px";
   ui.btn.style.height = buttonSize + "px";
   ui.btn.style.fontSize = (buttonSize * 0.5) + "px";
+  
+  const card = ui.gameCard.getBoundingClientRect();
+  const margin = 16;
 
-  const zone = document.getElementById('play-zone');
-  const zoneW = zone.offsetWidth;
-  const zoneH = zone.offsetHeight;
-  const margin = 8;
-
-  const maxX = zoneW - buttonSize - margin;
-  const maxY = zoneH - buttonSize - margin;
-
-  const randomX = margin + Math.random() * Math.max(0, maxX - margin);
-  const randomY = margin + Math.random() * Math.max(0, maxY - margin);
-
-  ui.btn.style.position = "absolute";
+  const safeTop    = card.top + margin;
+  const safeBottom = card.top + 220; // limite absolue : jamais en dessous de 220px depuis le haut de la carte
+  const safeLeft   = card.left + margin;
+  const safeRight  = card.right - buttonSize - margin;
+  
+  const randomX = safeLeft + Math.random() * Math.max(0, safeRight - safeLeft);
+  const randomY = safeTop  + Math.random() * Math.max(0, safeBottom - safeTop);
+  
+  ui.btn.style.position = "fixed";
   ui.btn.style.transition = "left 0.15s ease, top 0.15s ease";
   ui.btn.style.left = randomX + "px";
   ui.btn.style.top  = randomY + "px";
-
+  
   const speed = Math.max(600, 1200 - clicks * 10);
   clearTimeout(moveTimeout);
   moveTimeout = setTimeout(() => moveButton(), speed);
@@ -632,71 +619,86 @@ async function endGame() {
   clearTimeout(moveTimeout);
   gameOver = true;
   ui.btn.disabled = true;
-
-  // Optionnel : Tu devrais plutôt stocker un record par mode dans le localStorage
   if (clicks > bestScore) {
     bestScore = clicks;
     localStorage.setItem('pomme_best', bestScore);
   }
-
-  const modeLabel = gameMode === 'defi' ? '⚡ DÉFI' : gameMode === 'reaction' ? '🎯 RÉACTION' : '⏱ CLASSIQUE';
-  document.getElementById('finalMsg').textContent = `${playerName}, tu as cliqué ${clicks} fois ! 🍎\nMode: ${modeLabel} | Record: ${bestScore}`;
-  showScreen(screens.end);
   
-  // ICI : On envoie le score de la partie en cours ('clicks'), pas le record global !
-  await saveScore(playerName, clicks, gameMode); 
-  await renderLeaderboard();
-}
-
   const modeLabel = gameMode === 'defi' ? '⚡ DÉFI' : gameMode === 'reaction' ? '🎯 RÉACTION' : '⏱ CLASSIQUE';
   document.getElementById('finalMsg').textContent = `${playerName}, tu as cliqué ${clicks} fois ! 🍎\nMode: ${modeLabel} | Record: ${bestScore}`;
   showScreen(screens.end);
-  await saveScore(playerName, bestScore, gameMode);
+  await saveScore(playerName, clicks, gameMode);
   await renderLeaderboard();
 }
 
 async function saveScore(name, score, mode) {
+  if (!db) {
+    console.warn('Supabase non disponible');
+    return;
+  }
+  
   try {
-    // CORRECTION : On cherche s'il y a déjà une ligne pour CE joueur et CE mode précis
-    const existing = await sbFetch(
-      `scores?name=eq.${encodeURIComponent(name)}&mode=eq.${encodeURIComponent(mode)}&select=id,score&limit=1`
-    );
-
-    if (existing && existing.length > 0) {
-      // S'il a déjà joué à ce mode, on met à jour SEULEMENT si son nouveau score est meilleur
-      if (score > existing[0].score) {
-        await sbFetch(`scores?id=eq.${existing[0].id}`, {
-          method: "PATCH",
-          body: JSON.stringify({ score: score })
-        });
+    // Chercher un score existant pour ce joueur et ce mode
+    const { data: existing, error: selectError } = await db
+      .from('scores')
+      .select('id, score')
+      .eq('name', name)
+      .eq('mode', mode)
+      .maybeSingle();
+    
+    if (selectError) {
+      console.error('Erreur select:', selectError);
+      return;
+    }
+    
+    if (existing) {
+      // Mettre à jour si le nouveau score est meilleur
+      if (score > existing.score) {
+        const { error: updateError } = await db
+          .from('scores')
+          .update({ score })
+          .eq('id', existing.id);
+        if (updateError) console.error('Erreur update:', updateError);
       }
     } else {
-      // S'il n'a jamais joué à ce mode, on crée une nouvelle ligne pour lui
-      await sbFetch("scores", {
-        method: "POST",
-        body: JSON.stringify({ name: name, score: score, mode: mode })
-      });
+      // Insérer un nouveau score
+      const { error: insertError } = await db
+        .from('scores')
+        .insert([{ name, score, mode }]);
+      if (insertError) console.error('Erreur insert:', insertError);
     }
   } catch (e) {
-    console.error('Erreur saveScore:', e.message);
+    console.error('Exception saveScore:', e);
   }
 }
 
-
 async function renderLeaderboard() {
   const panel = document.getElementById('leaderboard-panel');
+  if (!db) {
+    panel.innerHTML = '<div style="text-align: center; padding: 16px;">Classement indisponible (hors-ligne) 😕</div>';
+    return;
+  }
   panel.innerHTML = '<div style="text-align: center; padding: 16px;">Chargement... 🍎</div>';
-
+  
   try {
-    const data = await sbFetch(
-      `scores?mode=eq.${encodeURIComponent(gameMode)}&select=name,score&order=score.desc&limit=20`
-    );
-
+    const { data, error } = await db
+      .from('scores')
+      .select('name, score')
+      .eq('mode', gameMode)
+      .order('score', { ascending: false })
+      .limit(20);
+    
+    if (error) {
+      console.error('Erreur Supabase:', error);
+      panel.innerHTML = '<div style="text-align: center; padding: 16px;">Erreur de connexion 😕</div>';
+      return;
+    }
+    
     if (!data || data.length === 0) {
       panel.innerHTML = '<div style="text-align: center; padding: 16px;">Aucun score pour ce mode 🍎</div>';
       return;
     }
-
+    
     const medals = ['🥇', '🥈', '🥉'];
     const classes = ['gold', 'silver', 'bronze'];
     panel.innerHTML = data.map((e, i) => {
@@ -707,7 +709,7 @@ async function renderLeaderboard() {
       return `<div class="lb-row ${cls}"><span class="lb-rank">${rank}</span><span class="lb-name">${safeName}</span><span class="lb-score">${e.score} 🍎</span></div>`;
     }).join('');
   } catch (e) {
-    console.error('Erreur leaderboard:', e.message);
+    console.error('Exception leaderboard:', e);
     panel.innerHTML = '<div style="text-align: center; padding: 16px;">Erreur de connexion 😕</div>';
   }
 }
