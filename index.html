@@ -10,17 +10,25 @@
 html, body { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
 
 body {
-  min-height: 100vh;
+  /* On utilise 'dvh' au lieu de 'vh' pour s'adapter parfaitement aux écrans de téléphone (ignore la barre d'adresse) */
+  min-height: 100dvh; 
+  width: 100vw;
   display: flex;
   justify-content: center;
   align-items: center;
   font-family: 'Nunito', sans-serif;
   background-color: #aed581;
-  background-size: cover;
-  background-position: center;
+  
+  /* --- RÉGLAGES DU FOND D'ÉCRAN --- */
+  background-size: cover; 
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  
   overflow: hidden;
   transition: background-image 0.5s ease;
 }
+
 
 .card {
   background: rgba(255,255,255,0.25);
@@ -669,3 +677,4 @@ function showPopup(x, y, text) {
 </script>
 </body>
 </html>
+
