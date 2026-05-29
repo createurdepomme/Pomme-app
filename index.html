@@ -30,11 +30,12 @@ body {
   background-size: cover !important; 
   background-position: center center !important;
   background-repeat: no-repeat !important;
-  background-attachment: scroll !important; /* Évite les bugs de bandes sur iOS */
+  background-attachment: scroll !important; 
   
   overflow: hidden;
   transition: background-image 0.5s ease;
   
+  /* Bloque les comportements natifs de balayage/zoom sur le fond */
   touch-action: manipulation;
   -webkit-user-select: none;
   user-select: none;
@@ -75,6 +76,11 @@ p {
   font-weight: 700;
   color: #2e7d32;
   margin-bottom: 18px;
+}
+
+button {
+  /* Évite le zoom sur les boutons classiques */
+  touch-action: manipulation;
 }
 
 .btn-green, .btn-red, .btn-orange, .btn-blue {
@@ -142,7 +148,9 @@ input {
   animation: floatBtn 3s ease-in-out infinite;
   outline: none;
   z-index: 100;
-  touch-action: manipulation;
+  
+  /* L'ARMURE ANTI-ZOOM POUR LE BOUTON PRINCIPAL */
+  touch-action: none;
   -webkit-user-select: none;
   user-select: none;
 }
@@ -470,9 +478,19 @@ input {
 </div>
 
 <script>
+// SCIPT ANTI-ZOOM GÉNÉRAL POUR IOS
 document.addEventListener('gesturestart', e => e.preventDefault());
 document.addEventListener('touchmove', e => {
   if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
+
+let lastTouchEnd = 0;
+document.addEventListener('touchend', function (event) {
+  let now = (new Date()).getTime();
+  if (now - lastTouchEnd <= 300) {
+    event.preventDefault(); // Bloque le double-tap natif d'iOS
+  }
+  lastTouchEnd = now;
 }, { passive: false });
 </script>
 
@@ -575,7 +593,7 @@ document.getElementById('nameBtn').addEventListener('click', () => {
   if (!val) { document.getElementById('nameInput').focus(); return; }
   
   rawName = val;
-  playerName = rawName; // Le pseudo est conservé tel quel (sans avatar)
+  playerName = rawName; 
   
   localStorage.setItem('pomme_raw_name', rawName);
   localStorage.setItem('pomme_avatar', playerAvatar);
@@ -668,7 +686,7 @@ function startGame() {
   ui.timer.textContent = timerLeft;
   ui.timer.parentElement.style.color = '#2e7d32';
   ui.progressBar.style.width = "0%";
-  ui.btn.textContent = playerAvatar; // Le bouton utilise l'avatar !
+  ui.btn.textContent = playerAvatar; 
   ui.btn.style.position = "relative";
   ui.btn.style.left = "auto";
   ui.btn.style.top = "auto";
@@ -727,7 +745,7 @@ ui.btn.addEventListener('click', (e) => {
     gain = 5;
     ui.btn.textContent = "🍏";
     ui.message.textContent = "🍏 FRUIT RARE +5 !!!";
-    setTimeout(() => { ui.btn.textContent = playerAvatar; }, 500); // Revient à l'avatar après bonus
+    setTimeout(() => { ui.btn.textContent = playerAvatar; }, 500); 
   }
 
   if (gameMode === 'defi') gain *= phaseMultiplier;
@@ -849,7 +867,7 @@ async function endGame() {
   }
 
   const modeLabel = gameMode === 'defi' ? '⚡ DÉFI' : gameMode === 'reaction' ? '🎯 RÉACTION' : '⏱ CLASSIQUE';
-  // Affichage de l'avatar au lieu de la pomme statique dans le message de fin
+  
   document.getElementById('finalMsg').innerHTML = `${playerName}, tu as cliqué ${clicks} fois ! ${playerAvatar}<br>Gains ajoutés à la banque. 💰<br>Record: ${bestScore}`;
   showScreen(screens.end);
   
@@ -969,5 +987,3 @@ function showPopup(x, y, text) {
 
 </body>
 </html>
-
-```
