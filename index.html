@@ -1,3 +1,7 @@
+Voici le code complet et définitif avec la correction "blindée" pour iPhone et Safari.
+J'ai intégré le nouveau CSS (-webkit-fill-available) tout en gardant ton système d'avatars, ta boutique avec tes images personnalisées et les classements corrigés.
+Tu n'as plus qu'à tout copier et remplacer dans ton fichier (et n'oublie pas de tester en navigation privée après avoir mis à jour ton GitHub !) :
+```html
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -7,27 +11,37 @@
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+
+html {
+  background-color: #aed581;
+  /* La formule magique pour les téléphones (Safari/Chrome mobile) */
+  height: -webkit-fill-available;
+}
 
 body {
-  /* On force la hauteur stricte de l'écran et on enlève les marges pour éviter la bande verte */
   margin: 0;
   padding: 0;
-  height: 100dvh; 
   width: 100vw;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  
   display: flex;
   justify-content: center;
   align-items: center;
   font-family: 'Nunito', sans-serif;
-  background-color: #aed581;
   
-  /* Le fond d'écran remplira tout sans décrocher */
-  background-size: cover; 
-  background-position: center;
-  background-repeat: no-repeat;
+  /* --- RÉGLAGES DU FOND D'ÉCRAN FORCÉS --- */
+  background-size: cover !important; 
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: scroll !important; /* Évite les bugs de bandes sur iOS */
   
   overflow: hidden;
   transition: background-image 0.5s ease;
+  
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .card {
@@ -543,10 +557,8 @@ function showScreen(screen) {
 playerAvatar = localStorage.getItem('pomme_avatar') || '🍎';
 rawName = localStorage.getItem('pomme_raw_name') || '';
 
-// Restaurer le pseudo dans le champ
 document.getElementById('nameInput').value = rawName;
 
-// Gérer les clics sur les avatars
 document.querySelectorAll('.avatar-option').forEach(opt => {
   if (opt.dataset.avatar === playerAvatar) {
     let currentSelected = document.querySelector('.avatar-option.selected');
