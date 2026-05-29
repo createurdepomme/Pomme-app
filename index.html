@@ -10,14 +10,26 @@
 html, body { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
 
 body {
-  /* On utilise 'dvh' au lieu de 'vh' pour s'adapter parfaitement aux écrans de téléphone (ignore la barre d'adresse) */
-  min-height: 100dvh; 
+  /* On force la hauteur stricte de l'écran et on enlève les marges */
+  margin: 0;
+  padding: 0;
+  height: 100dvh; 
   width: 100vw;
   display: flex;
   justify-content: center;
   align-items: center;
   font-family: 'Nunito', sans-serif;
   background-color: #aed581;
+  
+  /* Le fond d'écran remplira tout sans décrocher */
+  background-size: cover; 
+  background-position: center;
+  background-repeat: no-repeat;
+  
+  overflow: hidden;
+  transition: background-image 0.5s ease;
+}
+
   
   /* --- RÉGLAGES DU FOND D'ÉCRAN --- */
   background-size: cover; 
@@ -677,4 +689,3 @@ function showPopup(x, y, text) {
 </script>
 </body>
 </html>
-
