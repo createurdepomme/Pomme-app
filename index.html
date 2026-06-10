@@ -28,7 +28,6 @@ body {
   background-attachment: scroll !important;
   overflow: hidden;
   transition: background-image 0.5s ease;
-  /* FIX : manipulation au lieu de none pour ne pas bloquer les taps */
   touch-action: manipulation;
   -webkit-user-select: none;
   user-select: none;
@@ -87,7 +86,6 @@ input {
   transition: transform 0.12s, box-shadow 0.12s;
   animation: floatBtn 3s ease-in-out infinite;
   outline: none; z-index: 100;
-  /* FIX : manipulation (pas none) pour bloquer zoom sans bloquer les taps */
   touch-action: manipulation;
   -webkit-user-select: none; user-select: none;
 }
@@ -231,8 +229,6 @@ input {
 </div>
 
 <script>
-// FIX : uniquement gesturestart pour bloquer le pinch-zoom iOS
-// Le listener touchend global a été retiré car il bloquait les taps normaux
 document.addEventListener('gesturestart', e => e.preventDefault());
 document.addEventListener('touchmove', e => {
   if (e.touches.length > 1) e.preventDefault();
@@ -252,20 +248,30 @@ async function sbFetch(path, options = {}) {
   return data;
 }
 
+// FIX 1 : virgules corrigées + deux-points manquants sur bg_tomodachilife
 const SHOP_ITEMS = [
-  { id: 'bg_garden',      name: 'Potager (Base)',       price: 0,    url: 'url("Garden.jpg")' },
-  { id: 'bg_countryside', name: 'Campagne',             price: 300,  url: 'url("Countryside.JPG")' },
-  { id: 'bg_tuileries',   name: 'Jardin des Tuileries', price: 500,  url: 'url("Tuileries Garden.jpg")' },
-  { id: 'bg_beach',       name: 'Plage',                price: 1000, url: 'url("Beach.JPG")' }
-  { id: 'bg_tomodachilife'name: 'Tomodachi Life',       price: 10000, url: 'url("tomodachilife.jpg")' }
-{ id: 'bg_fuckoff'        name: 'Thug Life',            price: 20000, url: 'url("fuckofflol.jpg")' }
-{ id: 'bg_simpson'        name: 'Simpson',              price: 30000, url: 'url("simpson.jpg")' }
-{ id: 'bg_reflexion'      name: 'Ca fait réfléchir',    price: 40000, url: 'url("réflexion.jpg")' }
+  { id: 'bg_garden',       name: 'Potager (Base)',       price: 0,     url: 'url("Garden.jpg")' },
+  { id: 'bg_countryside',  name: 'Campagne',             price: 300,   url: 'url("Countryside.JPG")' },
+  { id: 'bg_tuileries',    name: 'Jardin des Tuileries', price: 500,   url: 'url("Tuileries Garden.jpg")' },
+  { id: 'bg_beach',        name: 'Plage',                price: 1000,  url: 'url("Beach.JPG")' },
+  { id: 'bg_tomodachilife',name: 'Tomodachi Life',       price: 10000, url: 'url("tomodachilife.jpg")' },
+  { id: 'bg_fuckoff',      name: 'Thug Life',            price: 20000, url: 'url("fuckofflol.jpg")' },
+  { id: 'bg_simpson',      name: 'Simpson',              price: 30000, url: 'url("simpson.jpg")' },
+  { id: 'bg_reflexion',    name: 'Ca fait réfléchir',    price: 40000, url: 'url("réflexion.jpg")' }
 ];
 
-let totalBank    = parseInt(localStorage.getItem('pomme_bank')) || 0;
-let purchasedBgs = JSON.parse(localStorage.getItem('pomme_inventory')) || ['bg_garden'];
-let currentBgId  = localStorage.getItem('pomme_equipped_bg') || 'bg_garden';
+// FIX 2 : helpers localStorage avec try/catch (résistants à la navigation privée)
+function lsGet(key, fallback) {
+  try { const v = localStorage.getItem(key); return v !== null ? v : fallback; }
+  catch { return fallback; }
+}
+function lsSet(key, val) {
+  try { localStorage.setItem(key, val); } catch {}
+}
+
+let totalBank    = parseInt(lsGet('pomme_bank', '0')) || 0;
+let purchasedBgs = JSON.parse(lsGet('pomme_inventory', '["bg_garden"]'));
+let currentBgId  = lsGet('pomme_equipped_bg', 'bg_garden');
 
 function applyBackground() {
   const bg = SHOP_ITEMS.find(i => i.id === currentBgId) || SHOP_ITEMS[0];
@@ -288,15 +294,15 @@ const screens = {
   shop: document.getElementById('screen-shop')
 };
 const ui = {
-  btn:      document.getElementById('appleBtn'),
-  counter:  document.getElementById('counter'),
-  message:  document.getElementById('message'),
-  niveau:   document.getElementById('niveau'),
+  btn:         document.getElementById('appleBtn'),
+  counter:     document.getElementById('counter'),
+  message:     document.getElementById('message'),
+  niveau:      document.getElementById('niveau'),
   progressBar: document.getElementById('progressBar'),
-  timer:    document.getElementById('timer'),
-  best:     document.getElementById('best'),
-  gameCard: document.getElementById('screen-game'),
-  playZone: document.getElementById('play-zone')
+  timer:       document.getElementById('timer'),
+  best:        document.getElementById('best'),
+  gameCard:    document.getElementById('screen-game'),
+  playZone:    document.getElementById('play-zone')
 };
 
 function showScreen(screen) {
@@ -307,8 +313,8 @@ function showScreen(screen) {
 }
 
 // Avatar
-playerAvatar = localStorage.getItem('pomme_avatar') || '🍎';
-rawName = localStorage.getItem('pomme_raw_name') || '';
+playerAvatar = lsGet('pomme_avatar', '🍎');
+rawName = lsGet('pomme_raw_name', '');
 document.getElementById('nameInput').value = rawName;
 
 document.querySelectorAll('.avatar-option').forEach(opt => {
@@ -327,8 +333,8 @@ document.getElementById('nameBtn').addEventListener('click', () => {
   const val = document.getElementById('nameInput').value.trim();
   if (!val) { document.getElementById('nameInput').focus(); return; }
   rawName = val; playerName = rawName;
-  localStorage.setItem('pomme_raw_name', rawName);
-  localStorage.setItem('pomme_avatar', playerAvatar);
+  lsSet('pomme_raw_name', rawName);
+  lsSet('pomme_avatar', playerAvatar);
   showScreen(screens.mode);
 });
 document.getElementById('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('nameBtn').click(); });
@@ -366,13 +372,13 @@ function renderShop() {
 window.buyBg = function(id, price) {
   if (totalBank >= price) {
     totalBank -= price; purchasedBgs.push(id);
-    localStorage.setItem('pomme_bank', totalBank);
-    localStorage.setItem('pomme_inventory', JSON.stringify(purchasedBgs));
+    lsSet('pomme_bank', totalBank);
+    lsSet('pomme_inventory', JSON.stringify(purchasedBgs));
     renderShop(); showPopup(window.innerWidth/2, window.innerHeight/2, "Acheté ! 🎉");
   } else { alert("Pas assez de pommes en banque ! 🍎"); }
 };
 window.equipBg = function(id) {
-  currentBgId = id; localStorage.setItem('pomme_equipped_bg', currentBgId);
+  currentBgId = id; lsSet('pomme_equipped_bg', currentBgId);
   applyBackground(); renderShop();
 };
 
@@ -397,36 +403,43 @@ function startGame() {
   ui.btn.style.fontSize   = "100px";
   ui.btn.style.transition = "";
   ui.btn.disabled         = false;
-  bestScore = parseInt(localStorage.getItem('pomme_best_' + gameMode)) || 0;
+  bestScore = parseInt(lsGet('pomme_best_' + gameMode, '0')) || 0;
   ui.best.textContent = bestScore;
   showScreen(screens.game);
 }
 
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+// FIX 3 : AudioContext initialisé en lazy (après interaction utilisateur)
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
 function playClick() {
-  const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
-  osc.connect(g); g.connect(audioCtx.destination); osc.type = 'sine';
-  osc.frequency.setValueAtTime(520, audioCtx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.08);
-  g.gain.setValueAtTime(0.25, audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
-  osc.start(); osc.stop(audioCtx.currentTime + 0.12);
+  const ctx = getAudioCtx();
+  const osc = ctx.createOscillator(), g = ctx.createGain();
+  osc.connect(g); g.connect(ctx.destination); osc.type = 'sine';
+  osc.frequency.setValueAtTime(520, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.08);
+  g.gain.setValueAtTime(0.25, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+  osc.start(); osc.stop(ctx.currentTime + 0.12);
 }
 function playBonus() {
+  const ctx = getAudioCtx();
   [0,0.12,0.24].forEach((delay, i) => {
-    const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
-    osc.connect(g); g.connect(audioCtx.destination); osc.type = 'triangle';
-    osc.frequency.setValueAtTime([523,659,784][i], audioCtx.currentTime + delay);
-    g.gain.setValueAtTime(0.3, audioCtx.currentTime + delay);
-    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + 0.2);
-    osc.start(audioCtx.currentTime + delay); osc.stop(audioCtx.currentTime + delay + 0.22);
+    const osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.connect(g); g.connect(ctx.destination); osc.type = 'triangle';
+    osc.frequency.setValueAtTime([523,659,784][i], ctx.currentTime + delay);
+    g.gain.setValueAtTime(0.3, ctx.currentTime + delay);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.2);
+    osc.start(ctx.currentTime + delay); osc.stop(ctx.currentTime + delay + 0.22);
   });
 }
 
 ui.btn.addEventListener('click', (e) => {
   if (gameOver || ui.btn.disabled) return;
   if (!gameStarted) { gameStarted = true; startTimer(); }
-  audioCtx.resume();
 
   let gain = 1;
   if (Math.random() < 0.08) {
@@ -517,9 +530,8 @@ async function endGame() {
   clearInterval(timerInterval); clearTimeout(moveTimeout);
   gameOver = true; ui.btn.disabled = true;
   totalBank += clicks;
-  localStorage.setItem('pomme_bank', totalBank);
-  if (clicks > bestScore) { bestScore = clicks; localStorage.setItem('pomme_best_' + gameMode, bestScore); }
-  const modeLabel = gameMode === 'defi' ? '⚡ DÉFI' : gameMode === 'reaction' ? '🎯 RÉACTION' : '⏱ CLASSIQUE';
+  lsSet('pomme_bank', totalBank);
+  if (clicks > bestScore) { bestScore = clicks; lsSet('pomme_best_' + gameMode, bestScore); }
   document.getElementById('finalMsg').innerHTML = `${playerName}, tu as cliqué ${clicks} fois ! ${playerAvatar}<br>Gains ajoutés à la banque. 💰<br>Record : ${bestScore}`;
   showScreen(screens.end);
   await saveScore(playerName, bestScore, gameMode);
